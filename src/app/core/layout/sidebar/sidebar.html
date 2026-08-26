@@ -1,0 +1,37 @@
+<aside class="w-64 h-full bg-ferremas-surface border-r border-ferremas-border text-slate-400 flex flex-col justify-between shadow-2xl lg:shadow-none">
+  <div>
+    <!-- Logo Identificador -->
+    <div class="h-16 flex items-center px-6 border-b border-ferremas-border gap-3">
+      <svg class="w-7 h-7 text-status-info" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+      </svg>
+      <span class="font-bold text-white text-lg tracking-wider">B&R Solutions</span>
+    </div>
+
+    <!-- Navegación con gatillo de cierre incluido -->
+    <nav class="mt-6 px-4 space-y-1.5">
+      @for (item of menuItems(); track item.label) {
+        <a [routerLink]="item.route" 
+           routerLinkActive="bg-status-info/20 border border-status-info/30 text-white font-medium shadow-sm"
+           (click)="onMenuOptionSelected()"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 hover:bg-ferremas-hover hover:text-white cursor-pointer group">
+          <svg class="w-5 h-5 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="item.iconPath" />
+          </svg>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  </div>
+
+  <!-- Identificación de Usuario Inferior -->
+  <div class="p-4 border-t border-ferremas-border flex items-center gap-3 bg-ferremas-bg/50">
+    <div class="w-10 h-10 bg-status-info/10 text-status-info font-bold rounded-xl flex items-center justify-center text-sm border border-status-info/20 shadow-inner shrink-0">
+      CM
+    </div>
+    <div class="flex flex-col min-w-0">
+      <span class="text-sm font-semibold text-white truncate">Yarod Bonilla</span>
+      <span class="text-xs text-slate-500 truncate">Administrador</span>
+    </div>
+  </div>
+</aside>

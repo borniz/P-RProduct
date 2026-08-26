@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  /* Fondos oscuros de la interfaz base de FERREMAS */
+  --color-ferremas-bg: #0a0f1d;
+  --color-ferremas-surface: #111827;
+  --color-ferremas-border: #1f2937;
+  --color-ferremas-hover: #1e293b;
+
+  /* Colores de estado corporativos reflejados en el inventario */
+  --color-status-success: #10b981; /* Óptimo / Activo */
+  --color-status-warning: #f59e0b; /* Bajo stock */
+  --color-status-danger: #ef4444;  /* Crítico / Agotados */
+  --color-status-info: #3b82f6;    /* Ventas / Destacados */
+  --color-status-purple: #8b5cf6;  /* Compras */
+}
+
+/* Estilos globales para forzar el Modo Oscuro de la imagen */
+body {
+  background-color: var(--color-ferremas-bg);
+  color: #f8fafc;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Personalización premium del scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0f1d;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
