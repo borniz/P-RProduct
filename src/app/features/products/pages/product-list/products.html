@@ -221,11 +221,11 @@
       @for (prod of filteredProducts(); track prod.id) {
         <div
           (click)="productUpdate(prod.id)"
-          class="bg-brand-surface border border-brand-border rounded-2xl p-4 flex flex-col justify-between hover:border-brand-hover hover:scale-[1.02] transition-all cursor-pointer group shadow-sm"
+          class="bg-brand-surface  rounded-2xl p-4 flex flex-col justify-between hover:border-brand-hover hover:scale-[1.02] transition-all cursor-pointer group shadow-sm"
         >
           <!-- Contenedor Cuadrado de Foto Grande de Lote -->
           <div
-            class="w-full aspect-square rounded-xl bg-brand-bg border border-brand-border/60 flex items-center justify-center overflow-hidden mb-3 relative"
+            class="w-full aspect-square rounded-xl bg-brand-bg  flex items-center justify-center overflow-hidden mb-3 relative"
           >
             @if (prod.imageUrl) {
               <img

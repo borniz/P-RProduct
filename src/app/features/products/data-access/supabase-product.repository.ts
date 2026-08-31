@@ -8,7 +8,7 @@ import { ProductDto } from '../models/product.dto';
 })
 export class SupabaseProductRepository implements ProductRepository {
   // Simulación de respuesta cruda de Supabase (Mesa de pruebas aislada)
-  private readonly rawSupabaseData: ProductDto[] = [
+    private readonly rawSupabaseData: ProductDto[] = [
     {
       id: '1',
       sku_id: 'HER-TL750',
@@ -17,8 +17,9 @@ export class SupabaseProductRepository implements ProductRepository {
       current_stock: 85,
       minimum_stock: 15,
       inventory_status: 'Óptimo',
-      buyPrice: '$15.000',
+      buyPrice: '$ 15.000',
       unit_price: '$ 89.900',
+      imageUrl: 'https://unsplash.com'
     },
     {
       id: '2',
@@ -28,8 +29,9 @@ export class SupabaseProductRepository implements ProductRepository {
       current_stock: 120,
       minimum_stock: 50,
       inventory_status: 'Óptimo',
-      buyPrice: '$15.000',
+      buyPrice: '$ 15.000',
       unit_price: '$ 2.450',
+      imageUrl: 'https://unsplash.com'
     },
     {
       id: '3',
@@ -39,8 +41,9 @@ export class SupabaseProductRepository implements ProductRepository {
       current_stock: 22,
       minimum_stock: 25,
       inventory_status: 'Bajo',
-      buyPrice: '$15.000',
+      buyPrice: '$ 15.000',
       unit_price: '$ 34.900',
+      imageUrl: 'https://unsplash.com'
     },
     {
       id: '4',
@@ -50,8 +53,9 @@ export class SupabaseProductRepository implements ProductRepository {
       current_stock: 4,
       minimum_stock: 20,
       inventory_status: 'Crítico',
-      buyPrice: '$15.000',
+      buyPrice: '$ 15.000',
       unit_price: '$ 1.250',
+      imageUrl: 'https://unsplash.com'
     },
     {
       id: '5',
@@ -61,8 +65,9 @@ export class SupabaseProductRepository implements ProductRepository {
       current_stock: 40,
       minimum_stock: 10,
       inventory_status: 'Óptimo',
-      buyPrice: '$15.000',
+      buyPrice: '$ 15.000',
       unit_price: '$ 45.900',
+      imageUrl: 'https://unsplash.com'
     },
     {
       id: '6',
@@ -72,8 +77,9 @@ export class SupabaseProductRepository implements ProductRepository {
       current_stock: 15,
       minimum_stock: 30,
       inventory_status: 'Bajo',
-      buyPrice: '$15.000',
+      buyPrice: '$ 15.000',
       unit_price: '$ 5.900',
+      imageUrl: 'https://unsplash.com'
     },
     {
       id: '7',
@@ -83,10 +89,12 @@ export class SupabaseProductRepository implements ProductRepository {
       current_stock: 2,
       minimum_stock: 8,
       inventory_status: 'Crítico',
-      buyPrice: '$15.000',
+      buyPrice: '$ 15.000',
       unit_price: '$ 18.500',
-    },
+      imageUrl: 'https://unsplash.com'
+    }
   ];
+
 
   // Instanciamos el Signal transformando los registros mediante el mapeador de la arquitectura
   private readonly _products = signal<Product[]>(
