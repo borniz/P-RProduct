@@ -1,0 +1,72 @@
+<div class="space-y-6 max-w-3xl mx-auto">
+  <!-- Cabecera Dinámica Reactiva -->
+  <div>
+    <h1 class="text-2xl font-bold text-white tracking-tight">{{ pageTitle() }}</h1>
+    <p class="text-sm text-slate-400 mt-0.5">{{ pageSubtitle() }}</p>
+  </div>
+
+  <form (submit)="onSubmit($event)" class="bg-brand-surface border border-brand-border rounded-2xl p-6 space-y-5 text-sm">
+    
+    @if (errorMessage()) {
+      <div class="p-3 bg-status-danger/10 border border-status-danger/20 rounded-xl text-xs font-semibold text-status-danger">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- [TODOS TUS INPUTS SE MANTIENEN EXACTAMENTE IGUAL...] -->
+    <!-- (Nombre, SKU, Categoría, Stock, MinStock, buyPrice y unit_price quedan idénticos) -->
+    <div class="space-y-1">
+      <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Nombre del Producto *</label>
+      <input (input)="onInputName($event)" [value]="name()" type="text" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors">
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Código SKU (Opcional)</label>
+        <input (input)="onInputSku($event)" [value]="sku()" type="text" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors uppercase">
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Categoría</label>
+        <select (change)="onSelectCategory($event)" [value]="category()" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors cursor-pointer">
+          <option value="Herramientas eléctricas">Herramientas eléctricas</option>
+          <option value="Herramientas manuales">Herramientas manuales</option>
+          <option value="Fijaciones">Fijaciones</option>
+          <option value="Accesorios">Accesorios</option>
+          <option value="Protección personal">Protección personal</option>
+          <option value="Pinturas">Pinturas</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Stock Inicial</label>
+        <input (input)="onInputStock($event)" [value]="stock()" type="number" min="0" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors font-mono">
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Stock Mínimo</label>
+        <input (input)="onInputMinStock($event)" [value]="minStock()" type="number" min="0" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors font-mono">
+      </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Precio de Compra (buyPrice) *</label>
+        <input (input)="onInputBuyPrice($event)" [value]="buyPrice()" type="text" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors font-mono">
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Precio de Venta (unit_price) *</label>
+        <input (input)="onInputUnitPrice($event)" [value]="unitPrice()" type="text" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors font-mono">
+      </div>
+    </div>
+
+    <!-- Botonera Dinámica con Texto de Acción Computado -->
+    <div class="pt-4 border-t border-brand-border flex items-center justify-end gap-3">
+      <button (click)="cancel()" type="button" 
+              class="px-4 py-2.5 border border-brand-border text-slate-400 hover:text-white rounded-xl font-semibold hover:bg-brand-hover transition-all cursor-pointer">
+        Cancelar
+      </button>
+      <button type="submit" 
+              class="px-5 py-2.5 bg-status-info hover:bg-status-info/90 text-white rounded-xl font-semibold shadow-md transition-all cursor-pointer">
+        {{ submitButtonText() }}
+      </button>
+    </div>
+  </form>
+</div>
