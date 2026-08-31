@@ -3,17 +3,20 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { PRODUCT_REPOSITORY } from '../../data-access/product.repository';
 import { CATEGORY_REPOSITORY } from '../../../inventory/categories/data-access/category.repository';
 import { UNIT_REPOSITORY } from '../../../inventory/units/data-access/unit.repository';
-import { Product } from '../../models/product.model';
 import { BRAND_REPOSITORY } from '../../../inventory/brands/data-access/brands.repository';
+import { Product } from '../../models/product.model';
+
+// 📌 IMPORTACIONES ARQUITECTÓNICAS GENÉRICAS
+import { GenericInventoryItem, ModuleMetadata } from '../../../inventory/shared/models/generic-inventory.model';
+import { GenericFormModalComponent } from '../../../inventory/shared/components/generic-form-modal/generic-form-modal';
 
 @Component({
   selector: 'app-product-create',
   standalone: true,
-  imports: [], // Control flow nativo de Angular v22
+  imports: [GenericFormModalComponent], // <-- REGISTRADO EL COMPONENTE COMPARTIDO
   templateUrl: './product-create.html'
 })
 export class ProductCreate implements OnInit {
-  // Inyecciones funcionales de dependencias de la arquitectura B&R Solutions
   private readonly productService = inject(PRODUCT_REPOSITORY);
   private readonly categoryService = inject(CATEGORY_REPOSITORY);
   private readonly brandService = inject(BRAND_REPOSITORY);
@@ -25,32 +28,44 @@ export class ProductCreate implements OnInit {
   // Signals de Control para los Inputs del Formulario
   readonly name = signal<string>('');
   readonly sku = signal<string>('');
-  readonly category = signal<string>(''); // Inician vacíos para forzar selección
-  readonly brand = signal<string>('');    // NUEVA OPCIÓN VIVA
-  readonly unit = signal<string>('');     // NUEVA OPCIÓN VIVA
+  readonly category = signal<string>(''); 
+  readonly brand = signal<string>('');    
+  readonly unit = signal<string>('');     
   readonly stock = signal<string>('0');
   readonly minStock = signal<string>('0');
   readonly buyPrice = signal<string>('');
   readonly unitPrice = signal<string>('');
   readonly imagePreview = signal<string | null>(null);
 
-  // Estados de control de la operación dual
+  // 📌 SIGNALS REEL PARA ABRIR LOS MODALES FLOTANTES SIN REDIRECCIÓN
+  readonly isCategoryModalOpen = signal<boolean>(false);
+  readonly isBrandModalOpen = signal<boolean>(false);
+  readonly isUnitModalOpen = signal<boolean>(false);
+
+  // 📌 METADATOS DE CONFIGURACIÓN SEMÁNTICA DUAL
+  readonly categoryMetadata: ModuleMetadata = {
+    entityName: 'Categoría', pluralName: 'Categorías', subtitle: 'Parámetro rápido', metricLabel: '', hasDescription: true, descriptionPlaceholder: 'Alcance...'
+  };
+  readonly brandMetadata: ModuleMetadata = {
+    entityName: 'Marca', pluralName: 'Marcas', subtitle: 'Parámetro rápido', metricLabel: '', hasDescription: true, descriptionPlaceholder: 'Detalles...'
+  };
+  readonly unitMetadata: ModuleMetadata = {
+    entityName: 'Unidad', pluralName: 'Unidades', subtitle: 'Parámetro rápido', metricLabel: '', hasDescription: false, descriptionPlaceholder: ''
+  };
+
   readonly productId = signal<string | null>(null);
   readonly errorMessage = signal<string>('');
 
-  // 📌 LISTAS REACTIVAS EXPUESTAS DESDE LOS REPOSITORIOS GENÉRICOS
   readonly categoriesList = this.categoryService.getCategories();
   readonly brandsList = this.brandService.getBrands();
   readonly unitsList = this.unitService.getUnits();
 
-  // Señales Computadas Duales
   readonly isEditMode = computed(() => this.productId() !== null);
   readonly pageTitle = computed(() => this.isEditMode() ? 'Actualizar Producto' : 'Nuevo Producto');
   readonly pageSubtitle = computed(() => this.isEditMode() ? 'Modifica las existencias o valores comerciales del artículo' : 'Registra un nuevo artículo en el catálogo maestro de B&R Solutions');
   readonly submitButtonText = computed(() => this.isEditMode() ? 'Guardar Cambios' : 'Registrar Artículo');
 
   ngOnInit(): void {
-    // Inicialización por defecto con el primer elemento de las listas si existen
     if (this.categoriesList().length > 0) this.category.set(this.categoriesList()[0].name);
     if (this.brandsList().length > 0) this.brand.set(this.brandsList()[0].name);
     if (this.unitsList().length > 0) this.unit.set(this.unitsList()[0].name);
@@ -70,11 +85,8 @@ export class ProductCreate implements OnInit {
       this.name.set(productToEdit.name);
       this.sku.set(productToEdit.sku === 'SIN-SKU' ? '' : productToEdit.sku);
       this.category.set(productToEdit.category);
-      
-      // Intentamos precargar campos extendidos si ya existen en el dominio, si no, quedan por defecto
       if (productToEdit.brand) this.brand.set(productToEdit.brand);
       if (productToEdit.unit) this.unit.set(productToEdit.unit);
-
       this.stock.set(String(productToEdit.stock || 0).replace(/\D/g, ''));
       this.minStock.set(String(productToEdit.minStock || 0).replace(/\D/g, ''));
       this.buyPrice.set((productToEdit.buyPrice || '').replace(/\D/g, ''));
@@ -85,41 +97,67 @@ export class ProductCreate implements OnInit {
     }
   }
 
-  // --- MANEJADORES DE EVENTOS DE SELECCIÓN Y TEXTO ---
+  // --- MANEJADORES DE EVENTOS INTERCEPTORES CORREGIDOS ---
+  onSelectCategory(e: Event): void {
+    const val = (e.target as HTMLSelectElement).value;
+    if (val === 'categoryCreate') {
+      this.isCategoryModalOpen.set(true);
+    } else {
+      this.category.set(val);
+    }
+  }
+
+  onSelectBrand(e: Event): void {
+    const val = (e.target as HTMLSelectElement).value;
+    if (val === 'brandCreate') {
+      this.isBrandModalOpen.set(true);
+    } else {
+      this.brand.set(val);
+    }
+  }
+
+  onSelectUnit(e: Event): void {
+    const val = (e.target as HTMLSelectElement).value;
+    if (val === 'unitCreate') {
+      this.isUnitModalOpen.set(true);
+    } else {
+      this.unit.set(val);
+    }
+  }
+
+  // --- CALLBACKS DE PERSISTENCIA INMEDIATA ---
+  onCategoryCreated(item: GenericInventoryItem): void {
+    this.categoryService.addCategory(item);
+    this.category.set(item.name);
+    this.isCategoryModalOpen.set(false);
+  }
+
+  onBrandCreated(item: GenericInventoryItem): void {
+    this.brandService.addBrand(item);
+    this.brand.set(item.name);
+    this.isBrandModalOpen.set(false);
+  }
+
+  onUnitCreated(item: GenericInventoryItem): void {
+    this.unitService.addUnit(item);
+    this.unit.set(item.name);
+    this.isUnitModalOpen.set(false);
+  }
+
+  // --- COMPORTAMIENTO FINANCIERO Y NUMÉRICO ---
   onInputName(e: Event): void { this.name.set((e.target as HTMLInputElement).value); }
   onInputSku(e: Event): void { this.sku.set((e.target as HTMLInputElement).value); }
-  
-  onSelectCategory(e: Event): void {
-     this.category.set((e.target as HTMLSelectElement).value); 
-     if(this.category()==='categoryCreate'){
-      this.router.navigate(['/inventory/categories']);
-     }
-    }
-  onSelectBrand(e: Event): void {
-     this.brand.set((e.target as HTMLSelectElement).value); 
-     if(this.brand()==='brandCreate'){
-      this.router.navigate(["/inventory/brands"])
-     }
-    }
-  onSelectUnit(e: Event): void {
-     this.unit.set((e.target as HTMLSelectElement).value); 
-     if(this.unit()==='unitCreate'){
-      this.router.navigate(["/inventory/units"])
-     }
-    }
-
   onInputStock(e: Event): void { this.handleNumericInput(e, this.stock); }
   onInputMinStock(e: Event): void { this.handleNumericInput(e, this.minStock); }
   onInputBuyPrice(e: Event): void { this.handleNumericInput(e, this.buyPrice); }
   onInputUnitPrice(e: Event): void { this.handleNumericInput(e, this.unitPrice); }
 
-  // --- PROCESADOR DE IMÁGENES ---
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
     if (!file.type.startsWith('image/')) {
-      this.errorMessage.set('El archivo seleccionado debe ser una imagen válida (PNG, JPG, WEBP).');
+      this.errorMessage.set('El archivo seleccionado debe ser una imagen válida.');
       return;
     }
     const reader = new FileReader();
@@ -129,7 +167,6 @@ export class ProductCreate implements OnInit {
 
   removeImage(): void { this.imagePreview.set(null); }
 
-  // --- MÉTODOS GENÉRICOS DE FORMATEO ---
   formatVisual(value: string | number | null | undefined): string {
     if (value === null || value === undefined || value === '') return '';
     const cleanValue = value.toString().replace(/\D/g, '');
@@ -146,9 +183,8 @@ export class ProductCreate implements OnInit {
 
   onSubmit(event: Event): void {
     event.preventDefault();
-
     if (!this.name().trim() || !this.unitPrice().trim() || !this.buyPrice().trim()) {
-      this.errorMessage.set('El nombre, el precio de compra y el precio de venta son campos obligatorios.');
+      this.errorMessage.set('Campos obligatorios incompletos.');
       return;
     }
 
@@ -164,8 +200,8 @@ export class ProductCreate implements OnInit {
       sku: this.sku().trim() ? this.sku().trim().toUpperCase() : 'SIN-SKU',
       name: this.name().trim(),
       category: this.category(),
-      brand: this.brand(), // Almacenamiento elástico de la marca
-      unit: this.unit(),   // Almacenamiento elástico de la unidad
+      brand: this.brand(),
+      unit: this.unit(),
       stock: numericStock,       
       minStock: numericMinStock, 
       status: computedStatus,
@@ -174,11 +210,8 @@ export class ProductCreate implements OnInit {
       imageUrl: this.imagePreview() || undefined
     };
 
-    if (this.isEditMode()) {
-      this.productService.updateProduct(productPayload);
-    } else {
-      this.productService.addProduct(productPayload);
-    }
+    if (this.isEditMode()) this.productService.updateProduct(productPayload);
+    else this.productService.addProduct(productPayload);
 
     this.router.navigate(['/products']);
   }
