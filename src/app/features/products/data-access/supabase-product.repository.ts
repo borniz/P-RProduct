@@ -117,16 +117,20 @@ export class SupabaseProductRepository implements ProductRepository {
 
   // Mapper: Aísla la interfaz de las variaciones de nombres de columnas del backend
   private mapToDomain(dto: ProductDto): Product {
-    return {
-      id: dto.id,
-      sku: dto.sku_id,
-      name: dto.product_name,
-      category: dto.category_name,
-      stock: dto.current_stock,
-      minStock: dto.minimum_stock,
-      status: dto.inventory_status,
-      buyPrice: dto.buyPrice,
-      price: dto.unit_price,
-    };
-  }
+  return {
+    id: dto.id,
+    sku: dto.sku_id ? dto.sku_id : 'SIN-SKU',
+    name: dto.product_name,
+    category: dto.category_name,
+    brand: dto.brand_name ? dto.brand_name : 'Sin Marca',   // 📌 ASIGNACIÓN DE MARCA REAL
+    unit: dto.unit_name ? dto.unit_name : 'Unidad',         // 📌 ASIGNACIÓN DE UNIDAD REAL
+    stock: dto.current_stock,
+    minStock: dto.minimum_stock,
+    status: dto.inventory_status,
+    buyPrice: dto.buyPrice,
+    price: dto.unit_price,
+    imageUrl: dto.imageUrl
+  };
+}
+
 }

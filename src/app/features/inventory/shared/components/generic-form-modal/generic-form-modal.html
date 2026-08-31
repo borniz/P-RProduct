@@ -1,0 +1,48 @@
+<div class="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+  <div class="bg-brand-surface border border-brand-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col">
+    
+    <!-- Encabezado Adaptable -->
+    <div class="px-6 py-4 border-b border-brand-border flex items-center justify-between bg-brand-bg/40">
+      <div>
+        <h2 class="text-base font-semibold text-white tracking-tight">{{ modalTitle() }}</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Parametrización global de módulo en B&R Solutions</p>
+      </div>
+      <button (click)="closeForm.emit()" type="button" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-brand-hover transition-colors cursor-pointer">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+
+    <!-- Formulario Elástico -->
+    <form (submit)="onSubmit($event)" class="p-6 space-y-4 text-sm">
+      
+      @if (errorMessage()) {
+        <div class="p-3 bg-status-danger/10 border border-status-danger/20 rounded-xl text-xs font-semibold text-status-danger">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Código Identificador *</label>
+        <input (input)="onInputCode($event)" [value]="code()" [disabled]="isEditMode()" type="text" placeholder="Ej: BR-COD01" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm font-mono uppercase disabled:opacity-50" />
+      </div>
+
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Nombre Comercial de {{ metadata().entityName }} *</label>
+        <input (input)="onInputName($event)" [value]="name()" type="text" placeholder="Ingresa la descripción..." class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm" />
+      </div>
+
+      @if (metadata().hasDescription) {
+        <div class="space-y-1">
+          <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Descripción Breve</label>
+          <textarea (input)="onInputDesc($event)" [value]="description()" rows="3" [placeholder]="metadata().descriptionPlaceholder" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm resize-none"></textarea>
+        </div>
+      }
+
+      <!-- Botonera Unificada -->
+      <div class="pt-4 border-t border-brand-border flex items-center justify-end gap-3 bg-brand-surface">
+        <button (click)="closeForm.emit()" type="button" class="px-4 py-2.5 border border-brand-border text-slate-400 hover:text-white rounded-xl text-xs font-semibold hover:bg-brand-hover transition-all cursor-pointer">Cancelar</button>
+        <button type="submit" class="px-4 py-2.5 bg-status-info hover:bg-status-info/90 text-white rounded-xl text-xs font-semibold shadow-md transition-all cursor-pointer">{{ submitButtonText() }}</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -2,16 +2,15 @@ import { Routes } from '@angular/router';
 import { AppShell } from './core/layout/app-shell/app-shell';
 import { PRODUCT_REPOSITORY } from './features/products/data-access/product.repository';
 import { SupabaseProductRepository } from './features/products/data-access/supabase-product.repository';
+import { CATEGORY_REPOSITORY } from './features/inventory/categories/data-access/category.repository';
+import { SupabaseBrandRepository } from './features/inventory/brands/data-access/supabase-brand.repository';
+import { UNIT_REPOSITORY } from './features/inventory/units/data-access/unit.repository';
+import { SupabaseUnitRepository } from './features/inventory/units/data-access/supabase-unit.repository';
+import { SupabaseCategoryRepository } from './features/inventory/categories/data-access/supabase-category.respository';
+import { BRAND_REPOSITORY } from './features/inventory/brands/data-access/brands.repository';
 
 export const routes: Routes = [
-  // 1. Redirección de escape en la raíz absoluta para evitar congelamientos en blanco
-  {
-    path: '',
-    pathMatch: 'full',
-    redirectTo: 'dashboard',
-  },
-  
-  // 2. Nodo estructural del Layout unificado (AppShell maestro)
+  { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   {
     path: '',
     component: AppShell,
@@ -20,11 +19,17 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
-      
-      // 📌 MÓDULO AUTÓNOMO DE PRODUCTOS (Agrupado con sus propios proveedores locales)
+      // Importa las referencias que falten en las cabeceras de tu app.routes.ts:
+
+      // Reemplaza el segmento 'products' en tu enrutador:
       {
         path: 'products',
-        providers: [{ provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository }],
+        providers: [
+          { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
+          { provide: CATEGORY_REPOSITORY, useClass: SupabaseCategoryRepository },
+          { provide: BRAND_REPOSITORY, useClass: SupabaseBrandRepository }, // <-- NUEVO PROVEEDOR
+          { provide: UNIT_REPOSITORY, useClass: SupabaseUnitRepository }, // <-- NUEVO PROVEEDOR
+        ],
         children: [
           {
             path: '',
@@ -47,8 +52,31 @@ export const routes: Routes = [
           },
         ],
       },
-
-      // 📌 MÓDULO DE CONFIGURACIÓN GLOBAL (Independiente a primer nivel del AppShell)
+      // 📌 NUEVAS RUTAS DE SUBMÓDULOS CONECTADOS AL MOTOR GENÉRICO
+      {
+        path: 'inventory/categories',
+        providers: [{ provide: CATEGORY_REPOSITORY, useClass: SupabaseCategoryRepository }],
+        loadComponent: () =>
+          import('./features/inventory/categories/pages/category-list/category-list').then(
+            (m) => m.CategoryListComponent,
+          ),
+      },
+      {
+        path: 'inventory/brands',
+        providers: [{ provide: BRAND_REPOSITORY, useClass: SupabaseBrandRepository }],
+        loadComponent: () =>
+          import('./features/inventory/brands/pages/brand-list/brand-list').then(
+            (m) => m.BrandListComponent,
+          ),
+      },
+      {
+        path: 'inventory/units',
+        providers: [{ provide: UNIT_REPOSITORY, useClass: SupabaseUnitRepository }],
+        loadComponent: () =>
+          import('./features/inventory/units/pages/unit-list/unit-list').then(
+            (m) => m.UnitListComponent,
+          ),
+      },
       {
         path: 'settings',
         loadComponent: () =>
@@ -56,10 +84,5 @@ export const routes: Routes = [
       },
     ],
   },
-  
-  // 3. Comodín de seguridad final para atrapar URLs rotas
-  {
-    path: '**',
-    redirectTo: 'dashboard',
-  },
+  { path: '**', redirectTo: 'dashboard' },
 ];
