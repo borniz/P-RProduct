@@ -4,11 +4,14 @@ import { PRODUCT_REPOSITORY } from './features/products/data-access/product.repo
 import { SupabaseProductRepository } from './features/products/data-access/supabase-product.repository';
 
 export const routes: Routes = [
+  // 1. Redirección de escape en la raíz absoluta para evitar congelamientos en blanco
   {
     path: '',
     pathMatch: 'full',
     redirectTo: 'dashboard',
   },
+  
+  // 2. Nodo estructural del Layout unificado (AppShell maestro)
   {
     path: '',
     component: AppShell,
@@ -17,7 +20,8 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
-      // 📌 MEJOR PRÁCTICA: Agrupamos las rutas de productos bajo un mismo proveedor compartido
+      
+      // 📌 MÓDULO AUTÓNOMO DE PRODUCTOS (Agrupado con sus propios proveedores locales)
       {
         path: 'products',
         providers: [{ provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository }],
@@ -35,7 +39,7 @@ export const routes: Routes = [
               ),
           },
           {
-            path: 'edit/:id', // <-- NUEVA RUTA: El ':id' es una variable dinámica
+            path: 'edit/:id',
             loadComponent: () =>
               import('./features/products/pages/product-create/product-create').then(
                 (m) => m.ProductCreate,
@@ -43,8 +47,17 @@ export const routes: Routes = [
           },
         ],
       },
+
+      // 📌 MÓDULO DE CONFIGURACIÓN GLOBAL (Independiente a primer nivel del AppShell)
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/settings/settings').then((m) => m.SettingsComponent),
+      },
     ],
   },
+  
+  // 3. Comodín de seguridad final para atrapar URLs rotas
   {
     path: '**',
     redirectTo: 'dashboard',

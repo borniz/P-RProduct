@@ -8,4 +8,5 @@ export interface ProductDto {
   inventory_status: 'Óptimo' | 'Bajo' | 'Crítico';
   buyPrice:string;
   unit_price: string;
+  imageUrl?:string;
 }

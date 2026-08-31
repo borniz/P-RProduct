@@ -8,4 +8,5 @@ export interface Product {
   status: 'Óptimo' | 'Bajo' | 'Crítico';
   buyPrice:string;
   price: string;
+  imageUrl?:string
 }

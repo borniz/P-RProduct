@@ -1,6 +1,7 @@
 import { Component, signal, computed, inject } from '@angular/core';
-import { RouterModule, Router } from '@angular/router'; // <-- Agregada la importación de Router
-import { PRODUCT_REPOSITORY } from '../../data-access/product.repository'; // <-- Reconexión arquitectónica
+import { RouterModule, Router } from '@angular/router'; 
+import { PRODUCT_REPOSITORY } from '../../data-access/product.repository'; 
+import { SettingsService } from '../../../../core/services/settings.service';
 
 @Component({
   selector: 'app-products',
@@ -11,13 +12,13 @@ import { PRODUCT_REPOSITORY } from '../../data-access/product.repository'; // <-
 export class Products {
   // Inyecciones funcionales nativas de Angular v22
   private readonly productService = inject(PRODUCT_REPOSITORY);
-  private readonly router = inject(Router); // <-- Inyectado con éxito para solucionar la navegación
-
+  private readonly router = inject(Router); 
+  private readonly settingsService = inject(SettingsService);
   // Estados reactivos de control para los filtros de búsqueda de la UI
   readonly searchQuery = signal<string>('');
   readonly selectedStatus = signal<string>('Todos');
   private readonly selectProduct = signal<string>('');
-
+  readonly currentViewMode = this.settingsService.productViewMode;
   // Consumo directo de la señal reactiva y persistente del repositorio global
   readonly products = this.productService.getProducts();
 
@@ -33,6 +34,18 @@ export class Products {
     });
   });
 
+  /**
+   * Convierte un valor numérico o string de número puro a un formato visual limpio con puntos de miles.
+   * Requerido por la celda del precio base (buyPrice) en el archivo HTML.
+   */
+  formatVisual(value: string | number | null | undefined): string {
+    if (value === null || value === undefined || value === '') return '';
+    // Sanitiza el valor removiendo cualquier carácter no numérico por seguridad
+    const cleanValue = value.toString().replace(/\D/g, '');
+    if (!cleanValue) return '';
+    return new Intl.NumberFormat('es-CO').format(parseInt(cleanValue, 10));
+  }
+
   // Métodos reactivos para actualizar el estado de los filtros desde la vista
   updateSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -45,7 +58,6 @@ export class Products {
 
   // Método interactivo al presionar sobre la fila de la tabla
   productUpdate(id: string): void {
-    // Viaja de forma elástica a la ruta dual pasando el ID técnico del producto
     this.router.navigate(['/products/edit', id]); 
   }
 }
