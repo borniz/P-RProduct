@@ -1,51 +1,105 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { PRODUCT_REPOSITORY } from '../products/data-access/product.repository';
 import { STOCK_REPOSITORY } from '../inventory/stock/data-access/stock.repository';
+import { PRODUCT_REPOSITORY } from '../products/data-access/product.repository';
+import { POS_REPOSITORY } from '../pos/data-acces/pos.repository';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterModule], // Control Flow nativo
+  imports: [RouterModule],
   templateUrl: './dashboard.html'
 })
 export class DashboardComponent {
-  // Inyección funcional de la capa de datos en vivo de Supabase
   private readonly productService = inject(PRODUCT_REPOSITORY);
   private readonly stockService = inject(STOCK_REPOSITORY);
+  private readonly posService = inject(POS_REPOSITORY);
 
-  // Lectura directa de las señales reactivas de la nube
+  // Señales directas conectadas a internet (Supabase)
   readonly products = this.productService.getProducts();
   readonly movements = this.stockService.getMovements();
+  readonly sales = this.posService.getSales(); // <-- Asegúrate de que tu POS repo exponga getSales()
 
-  // 📊 MÉTRICA 1: Contador de productos totales en catálogo
+  // Controladores de estado local para el nuevo modal de alertas
+  readonly isAlertModalOpen = signal<boolean>(false);
+
+  // 📊 INDICADORES BASE
   readonly totalProductsCount = computed(() => this.products().length);
-
-  // 📊 MÉTRICA 2: Valorización total del inventario (Stock * Precio de compra)
+  
   readonly totalInventoryValue = computed(() => {
     return this.products().reduce((total, prod) => {
-      // Limpiamos los caracteres de moneda ($) y puntos para la operación matemática pura
-      const cleanBuyPrice = Number(prod.buyPrice.replace(/[^0-9]/g, '')) || 0;
+      const cleanBuyPrice = Number(prod.buyprice.replace(/[^0-9]/g, '')) || 0;
       return total + (prod.stock * cleanBuyPrice);
     }, 0);
   });
 
-  // 📊 MÉTRICA 3: Contador de productos en alerta (Stock <= MinStock)
-  readonly criticalStockCount = computed(() => {
-    return this.products().filter(p => p.status === 'Crítico' || p.status === 'Bajo').length;
+  // Lista completa de existencias en peligro (Crítico o Bajo) para el modal flotante
+  readonly allCriticalProducts = computed(() => {
+    return this.products().filter(p => p.status === 'Crítico' || p.status === 'Bajo');
   });
 
-  // 📊 MÉTRICA 4: Lista de los 4 movimientos más recientes del Kardex para el feed visual
-  readonly recentActivity = computed(() => {
-    return this.movements().slice(0, 4);
+  readonly criticalStockCount = computed(() => this.allCriticalProducts().length);
+  readonly recentActivity = computed(() => this.movements().slice(0, 4));
+  readonly tableAlertsList = computed(() => this.allCriticalProducts().slice(0, 3));
+
+  // 📈 ANALÍTICA CRONOLÓGICA DE VENTAS EN VIVO (Métricas solicitadas)
+  
+  // 1. Ventas Semanales (Últimos 7 días corridos)
+  readonly weeklySalesTotal = computed(() => {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    return this.sales()
+      .filter(sale => new Date(sale.createdAt) >= sevenDaysAgo)
+      .reduce((sum, sale) => sum + sale.total, 0);
   });
 
-  // 📊 MÉTRICA 5: Lista de productos en estado crítico para la tabla de alertas rápidas
-  readonly alertsList = computed(() => {
-    return this.products().filter(p => p.status === 'Crítico').slice(0, 3);
+  // 2. Ventas Mensuales (Mes actual)
+  readonly currentMonthSalesTotal = computed(() => {
+    const now = new Date();
+    return this.sales()
+      .filter(sale => {
+        const saleDate = new Date(sale.createdAt);
+        return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
+      })
+      .reduce((sum, sale) => sum + sale.total, 0);
   });
 
-  // --- MÉTODO GENÉRICO DE FORMATEO DE MONEDA MONO ---
+  // 3. Comparativa Porcentual con el Mes Pasado
+  readonly monthComparison = computed(() => {
+    const now = new Date();
+    
+    // Calcular ventas del mes anterior
+    const prevMonthSales = this.sales()
+      .filter(sale => {
+        const saleDate = new Date(sale.createdAt);
+        const targetMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+        const targetYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+        return saleDate.getMonth() === targetMonth && saleDate.getFullYear() === targetYear;
+      })
+      .reduce((sum, sale) => sum + sale.total, 0);
+
+    const currentSales = this.currentMonthSalesTotal();
+
+    if (prevMonthSales === 0) {
+      return { percentage: 100, isUp: true, label: 'Sin histórico previo' };
+    }
+
+    // Algoritmo de diferencial de crecimiento financiero
+    const difference = currentSales - prevMonthSales;
+    const percentage = Math.round((difference / prevMonthSales) * 100);
+
+    return {
+      percentage: Math.abs(percentage),
+      isUp: percentage >= 0,
+      label: percentage >= 0 ? `más que el mes pasado` : `menos que el mes pasado`
+    };
+  });
+
+  // Auxiliares de interfaz
+  openAlertsModal(): void { if (this.criticalStockCount() > 0) this.isAlertModalOpen.set(true); }
+  closeAlertsModal(): void { this.isAlertModalOpen.set(false); }
+
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
   }

@@ -54,31 +54,42 @@
           @for (cat of categoriesList(); track cat.id) {
             <option [value]="cat.name">{{ cat.name }}</option>
           }
-          <option value="categoryCreate"> + Crear Categoria</option>
+          <option value="categoryCreate" class="text-status-purple font-semibold bg-brand-surface/90"> + Crear Categoria</option>
         </select>
       </div>
     </div>
-    <!-- 📌 NUEVA FILA DOBLE REUTILIZABLE: Marcas y Unidades de Medida Dinámicas -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- 📌 NUEVA GRILA TRIPLE: Marcas, Unidades y Proveedores Dinámicos Conectados en Vivo -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div class="space-y-1">
         <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Fabricante / Marca</label>
-        <select (change)="onSelectBrand($event)" [value]="brand()" class="w-full bg-brand-bg border border-brand-border text-slate-600 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors cursor-pointer font-medium">
-          @for (br of brandsList(); track br.id) {
-            <option [value]="br.name">{{ br.name }}</option>
-          }
-          <option value="brandCreate"> + Crear Marca</option>
+        <select (change)="onSelectBrand($event)" [value]="brand()" class="w-full bg-brand-bg border border-brand-border text-slate-600 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors cursor-pointer font-medium text-xs">
+          @for (br of brandsList(); track br.id) { <option [value]="br.name">{{ br.name }}</option> }
+          <option value="brandCreate" class="text-status-purple font-semibold bg-brand-surface/90"> + Crear Marca</option>
         </select>
       </div>
+
       <div class="space-y-1">
         <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Unidad de Despacho</label>
-        <select (change)="onSelectUnit($event)" [value]="unit()" class="w-full bg-brand-bg border border-brand-border text-slate-600 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors cursor-pointer font-medium">
-          @for (un of unitsList(); track un.id) {
-            <option [value]="un.name">{{ un.name }}</option>
+        <select (change)="onSelectUnit($event)" [value]="unit()" class="w-full bg-brand-bg border border-brand-border text-slate-600 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors cursor-pointer font-medium text-xs">
+          @for (un of unitsList(); track un.id) { <option [value]="un.name">{{ un.name }}</option> }
+          <option value="unitCreate" class="text-status-purple font-semibold bg-brand-surface/90"> + Crear Unidad</option>
+        </select>
+      </div>
+
+      <!-- 📌 NUEVO FILTRO EN LÍNEA: Selector de Cuentas de Proveedores Reales -->
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Proveedor de Abastecimiento</label>
+        <select (change)="onSelectSupplier($event)" [value]="supplier()" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors cursor-pointer font-medium text-xs">
+          @for (sup of suppliersList(); track  sup.id) {
+            <option [value]="sup.name">{{ sup.name }}</option>
           }
-          <option value="unitCreate"> + Crear nueva Unidad De medida</option>
+          <option value="supplierCreate" class="text-status-purple font-semibold bg-brand-surface/90">
+            + Crear Proveedor...
+          </option>
         </select>
       </div>
     </div>
+
 
     <!-- Stock Inicial y Stock Mínimo -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -133,5 +144,11 @@
   <app-generic-form-modal [metadata]="unitMetadata" 
                           (closeForm)="isUnitModalOpen.set(false)" 
                           (saveItem)="onUnitCreated($event)">
+  </app-generic-form-modal>
+}
+@if (isSupplierModalOpen()) {
+  <app-generic-form-modal [metadata]="supplierMetadata" 
+                          (closeForm)="isSupplierModalOpen.set(false)" 
+                          (saveItem)="onSupplierCreated($event)">
   </app-generic-form-modal>
 }

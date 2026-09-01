@@ -92,12 +92,13 @@ export class SupabaseProductRepository implements ProductRepository {
       category: dto.category_name,
       brand: dto.brand_name || 'Sin Marca',
       unit: dto.unit_name || 'Unidad',
+      supplier: dto.supplier_name || 'Sin Proveedor',
       stock: dto.current_stock,
       minStock: dto.minimum_stock,
       status: dto.inventory_status,
-      buyPrice: dto.buyprice,
+      buyprice: dto.buyprice,
       price: dto.unit_price,
-      imageUrl: dto.imageurl
+      imageurl: dto.imageurl
     };
   }
 
@@ -109,12 +110,13 @@ export class SupabaseProductRepository implements ProductRepository {
       category_name: model.category,
       brand_name: model.brand,
       unit_name: model.unit,
+      supplier_name: model.supplier,
       current_stock: model.stock,
       minimum_stock: model.minStock,
       inventory_status: model.status,
-      buyprice: model.buyPrice,
+      buyprice: model.buyprice,
       unit_price: model.price,
-      imageurl: model.imageUrl
+      imageurl: model.imageurl
     };
   }
 }

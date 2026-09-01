@@ -22,7 +22,6 @@ export class Products {
   // Consumo directo de la señal reactiva y persistente del repositorio global
   readonly products = this.productService.getProducts();
 
-  // Señal derivada (Computed): Filtra en tiempo real combinando texto y estado de forma óptima
   readonly filteredProducts = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     const statusFilter = this.selectedStatus();
@@ -34,10 +33,7 @@ export class Products {
     });
   });
 
-  /**
-   * Convierte un valor numérico o string de número puro a un formato visual limpio con puntos de miles.
-   * Requerido por la celda del precio base (buyPrice) en el archivo HTML.
-   */
+ 
   formatVisual(value: string | number | null | undefined): string {
     if (value === null || value === undefined || value === '') return '';
     // Sanitiza el valor removiendo cualquier carácter no numérico por seguridad

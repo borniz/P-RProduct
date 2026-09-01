@@ -3,12 +3,13 @@ export interface Product {
   sku: string;
   name: string;
   category: string;
-  brand: string;        
-  unit: string;         
+  brand: string;
+  unit: string;
+  supplier: string;    
   stock: number;
   minStock: number;
   status: 'Óptimo' | 'Bajo' | 'Crítico';
-  buyPrice: string;
+  buyprice: string;
   price: string;
-  imageUrl?: string;
+  imageurl?: string;
 }

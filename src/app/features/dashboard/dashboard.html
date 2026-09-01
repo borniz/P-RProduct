@@ -1,216 +1,154 @@
 <div class="space-y-7">
-  <!-- Encabezado de Bienvenida Operativa -->
+  <!-- Encabezado de Bienvenida -->
   <div>
     <h1 class="text-2xl font-bold text-white tracking-tight">Panel de Control</h1>
-    <p class="text-sm text-slate-400 mt-0.5">
-      Métricas de rendimiento e indicadores en tiempo real de B&R Solutions
-    </p>
+    <p class="text-sm text-slate-400 mt-0.5">Métricas de rendimiento e indicadores en tiempo real de B&R Solutions</p>
   </div>
 
-  <!-- TARJETAS DE INDICADORES CLAVE (KPIs BI-DIRECCIONALES) -->
+  <!-- INDICADORES CLAVE (KPIs OPERATIVOS) -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-    <!-- KPI 1: Total de SKU Indexados -->
-    <div
-      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group"
-    >
+    
+    <!-- KPI 1: Total Catálogo -->
+    <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group">
       <div class="p-3 rounded-xl bg-status-info/10 text-status-info border border-status-info/10">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
-          />
-        </svg>
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
       </div>
       <div>
-        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider"
-          >Productos en Catálogo</span
-        >
-        <span
-          class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-info transition-colors"
-          >{{ totalProductsCount() }}</span
-        >
+        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Productos en Catálogo</span>
+        <span class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-info transition-colors">{{ totalProductsCount() }}</span>
       </div>
     </div>
 
-    <!-- KPI 2: Capital Total Invertido en Lotes (Calculado en Vivo) -->
-    <div
-      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group"
-    >
-      <div
-        class="p-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/10"
-      >
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 6v12m-3-2.818l.879.659c1.171.659 3.07.659 4.242 0 1.172-.659 1.172-1.728 0-2.387-.448-.252-1.072-.472-1.734-.613m-3.006 0c-.662-.141-1.286-.361-1.734-.613-1.172-.659-1.172-1.728 0-2.387 1.171-.659 3.07-.659 4.242 0l.878.659M4.5 6h15"
-          />
-        </svg>
+    <!-- KPI 2: Capital Invertido -->
+    <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group">
+      <div class="p-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/10">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.659 3.07.659 4.242 0 1.172-.659 1.172-1.728 0-2.387-.448-.252-1.072-.472-1.734-.613m-3.006 0c-.662-.141-1.286-.361-1.734-.613-1.172-.659-1.172-1.728 0-2.387 1.171-.659 3.07-.659 4.242 0l.878.659M4.5 6h15" /></svg>
       </div>
       <div>
-        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider"
-          >Valorización de Almacén</span
-        >
-        <span
-          class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-success transition-colors"
-          >{{ formatCurrency(totalInventoryValue()) }}</span
-        >
+        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Valorización de Almacén</span>
+        <span class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-success transition-colors">{{ formatCurrency(totalInventoryValue()) }}</span>
       </div>
     </div>
 
-    <!-- KPI 3: Alertas de Quiebre de Stock Activas -->
-    <div
-      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group sm:col-span-2 lg:col-span-1"
-    >
-      <div
-        class="p-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/10"
-      >
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-          />
-        </svg>
+    <!-- 🔔 KPI 3: Alertas de Quiebre de Stock (CLIQUEABLE PARA ABRIR MODAL DETALLADO) -->
+    <div (click)="openAlertsModal()" 
+         [class.cursor-pointer]="criticalStockCount() > 0"
+         class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group sm:col-span-2 lg:col-span-1 hover:border-status-danger/40 transition-all select-none">
+      <div class="p-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/10 group-hover:scale-105 transition-transform">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
       </div>
-      <div>
-        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider"
-          >Productos en Alerta</span
-        >
-        <span
-          class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-danger transition-colors"
-          >{{ criticalStockCount() }}</span
-        >
+      <div class="flex-1">
+        <div class="flex items-center justify-between">
+          <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Productos en Alerta</span>
+          @if (criticalStockCount() > 0) {
+            <span class="text-[9px] text-status-danger font-medium bg-status-danger/5 px-2 py-0.5 border border-status-danger/10 rounded-md group-hover:bg-status-danger/10 transition-colors">Ver todos ➔</span>
+          }
+        </div>
+        <span class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-danger transition-colors">{{ criticalStockCount() }}</span>
       </div>
     </div>
   </div>
-  <!-- DISTRIBUCIÓN HÍBRIDA DE MONITOREO DE OPERACIONES -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- PANEL IZQUIERDO: SEGUIMIENTO DE QUIEBRE DE STOCK -->
-    <div
-      class="lg:col-span-2 bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4"
-    >
-      <div>
-        <h2 class="text-base font-semibold text-white tracking-tight">
-          Alertas de Reabastecimiento Crítico
-        </h2>
-        <p class="text-xs text-slate-500 mt-0.5">
-          Artículos que alcanzaron o superaron el umbral de stock mínimo de seguridad
+
+  <!-- 📈 NUEVA SECCIÓN DE ANALÍTICA COMERCIAL FINANCIERA (Ventas Semanales y Mensuales) -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    
+    <!-- Bloque Ventas Semanales -->
+    <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex flex-col justify-between shadow-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ventas de los Últimos 7 Días</span>
+        <span class="w-2 h-2 rounded-full bg-status-info animate-pulse"></span>
+      </div>
+      <div class="mt-4">
+        <span class="text-3xl font-black text-white font-mono tracking-tight">{{ formatCurrency(weeklySalesTotal()) }}</span>
+        <p class="text-xs text-slate-500 mt-1">Cubicación total acumulada por terminales POS activas</p>
+      </div>
+    </div>
+
+    <!-- Bloque Ventas Mensuales con Comparativa SQL -->
+    <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex flex-col justify-between shadow-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ventas del Mes en Curso</span>
+        
+        <!-- Indicador de Tendencia Dinámico Comparativo -->
+        <div class="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-lg border bg-brand-bg"
+             [class.text-status-success]="monthComparison().isUp" [class.border-status-success/20]="monthComparison().isUp"
+             [class.text-status-danger]="!monthComparison().isUp" [class.border-status-danger/20]="!monthComparison().isUp">
+          <span>{{ monthComparison().isUp ? '▲' : '▼' }} {{ monthComparison().percentage }}%</span>
+        </div>
+      </div>
+      <div class="mt-4">
+        <span class="text-3xl font-black text-white font-mono tracking-tight">{{ formatCurrency(currentMonthSalesTotal()) }}</span>
+        <p class="text-xs text-slate-500 mt-1">
+          Flujo de caja comercial <span class="font-medium text-slate-300">{{ monthComparison().label }}</span>.
         </p>
       </div>
-
+    </div>
+  </div>
+  <!-- SECCIÓN INFERIOR: MONITOREO DE ALARMAS Y KARDEX (Mantén tus tablas originales) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4">
+      <div><h2 class="text-base font-semibold text-white tracking-tight">Alertas de Reabastecimiento Crítico</h2><p class="text-xs text-slate-500 mt-0.5">Artículos en desabastecimiento crítico</p></div>
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-sm">
-          <thead>
-            <tr
-              class="border-b border-brand-border text-[10px] font-bold text-slate-500 uppercase tracking-wider"
-            >
-              <th class="pb-2 font-semibold">Producto</th>
-              <th class="pb-2 font-semibold">Categoría</th>
-              <th class="pb-2 font-semibold text-center w-24">Stock Actual</th>
-              <th class="pb-2 font-semibold text-center w-24">Mínimo</th>
-            </tr>
-          </thead>
+          <thead><tr class="border-b border-brand-border text-[10px] font-bold text-slate-500 uppercase tracking-wider"><th class="pb-2 font-semibold">Producto</th><th class="pb-2 font-semibold">Categoría</th><th class="pb-2 font-semibold text-center w-24">Stock Actual</th><th class="pb-2 font-semibold text-center w-24">Mínimo</th></tr></thead>
           <tbody class="divide-y divide-brand-border/20 text-slate-300">
-            @for (alert of alertsList(); track alert.id) {
-              <tr class="hover:bg-brand-hover/10 transition-colors duration-75">
-                <td class="py-3 font-medium text-white truncate max-w-[160px]">{{ alert.name }}</td>
-                <td class="py-3 text-xs text-slate-400">{{ alert.category }}</td>
-                <td class="py-3 text-center font-bold font-mono text-xs text-status-danger">
-                  {{ alert.stock }} uds
-                </td>
-                <td class="py-3 text-center font-mono text-xs text-slate-500">
-                  {{ alert.minStock }} uds
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="4" class="py-10 text-center text-slate-500 text-xs">
-                  ¡Felicidades! No se registran productos en quiebre crítico de stock en este
-                  momento.
-                </td>
-              </tr>
+            @for (alert of tableAlertsList(); track alert.id) {
+              <tr class="hover:bg-brand-hover/10 transition-colors duration-75"><td class="py-3 font-medium text-white truncate max-w-[160px]">{{ alert.name }}</td><td class="py-3 text-xs text-slate-400">{{ alert.category }}</td><td class="py-3 text-center font-bold font-mono text-xs text-status-danger">{{ alert.stock }} uds</td><td class="py-3 text-center font-mono text-xs text-slate-500">{{ alert.minStock }} uds</td></tr>
             }
           </tbody>
         </table>
       </div>
     </div>
-
-    <!-- PANEL DERECHO: MONITOR HISTÓRICO DE OPERACIONES KARDEX (FEED VIVO) -->
     <div class="bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4">
-      <div>
-        <h2 class="text-base font-semibold text-white tracking-tight">
-          Últimos Movimientos de Bodega
-        </h2>
-        <p class="text-xs text-slate-500 mt-0.5">
-          Bitácora de auditoría en tiempo real conectada a la nube
-        </p>
-      </div>
-
-      <div class="flow-root">
-        <ul class="-mb-8">
-          @for (mov of recentActivity(); track mov.id; let last = $last) {
-            <li>
-              <div class="relative pb-6">
-                <!-- Línea de conexión cronológica vertical (se oculta en el último elemento) -->
-                @if (!last) {
-                  <span
-                    class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-brand-border"
-                    aria-hidden="true"
-                  ></span>
-                }
-                <div class="relative flex space-x-3">
-                  <!-- Indicador de Punto de Color según el Tipo de Flujo -->
-                  <div>
-                    <span
-                      [class.bg-status-success]="mov.type === 'Ingreso'"
-                      [class.bg-status-danger]="mov.type === 'Egreso'"
-                      [class.bg-status-warning]="mov.type === 'Ajuste'"
-                      class="h-8 w-8 rounded-xl flex items-center justify-center ring-4 ring-brand-surface border border-white/5 shadow-inner"
-                    >
-                      <!-- Icono vectorial compacto representativo -->
-                      <svg
-                        class="w-3.5 h-3.5 text-white"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="2.5"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                  <!-- Detalle de la Transacción del Almacén -->
-                  <div class="flex-1 min-w-0 pt-0.5">
-                    <p class="text-xs font-semibold text-slate-200 truncate">
-                      {{ mov.productName }}
-                    </p>
-                    <p class="text-[11px] text-slate-400 mt-0.5 truncate">
-                      <span class="font-medium text-slate-300">{{ mov.type }}:</span>
-                      {{ mov.reason }}
-                    </p>
-                    <div
-                      class="flex items-center justify-between text-[10px] text-slate-500 font-mono mt-1"
-                    >
-                      <span>{{ mov.date }}</span>
-                      <span class="font-medium text-slate-400">{{ mov.operator }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </li>
-          } @empty {
-            <div class="py-12 text-center text-slate-500 text-xs">
-              No se registran transacciones recientes en el Kardex centralizado.
-            </div>
-          }
-        </ul>
-      </div>
+      <div><h2 class="text-base font-semibold text-white tracking-tight">Últimos Movimientos de Bodega</h2><p class="text-xs text-slate-500 mt-0.5">Bitácora de auditoría en tiempo real</p></div>
+      <div class="flow-root"><ul class="-mb-8">
+        @for (mov of recentActivity(); track mov.id; let last = $last) {
+          <li><div class="relative pb-6">@if (!last) { <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-brand-border"></span> }<div class="relative flex space-x-3"><div><span [class.bg-status-success]="mov.type === 'Ingreso'" [class.bg-status-danger]="mov.type === 'Egreso'" [class.bg-status-warning]="mov.type === 'Ajuste'" class="h-8 w-8 rounded-xl flex items-center justify-center ring-4 ring-brand-surface border border-white/5 shadow-inner"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg></span></div><div class="flex-1 min-w-0 pt-0.5"><p class="text-xs font-semibold text-slate-200 truncate">{{ mov.productName }}</p><p class="text-[11px] text-slate-400 mt-0.5 truncate"><span class="font-medium text-slate-300">{{ mov.type }}:</span> {{ mov.reason }}</p><div class="flex items-center justify-between text-[10px] text-slate-500 font-mono mt-1"><span>{{ mov.date }}</span><span class="font-medium text-slate-400">{{ mov.operator }}</span></div></div></div></div></li>
+        }
+      </ul></div>
     </div>
   </div>
 </div>
+
+<!-- 📌 NUEVO MODAL COMPLETO REACTIVO DE PRODUCTOS EN ALERTA -->
+@if (isAlertModalOpen()) {
+  <div class="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+    <div class="bg-brand-surface border border-brand-border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      
+      <!-- Encabezado del Modal -->
+      <div class="px-6 py-4 border-b border-brand-border flex items-center justify-between bg-brand-bg/40">
+        <div>
+          <h2 class="text-base font-bold text-white tracking-tight">Reporte Crítico de Inventario</h2>
+          <p class="text-xs text-status-danger font-medium mt-0.5">Se registran {{ criticalStockCount() }} SKU en estado de riesgo operativo</p>
+        </div>
+        <button (click)="closeAlertsModal()" type="button" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-brand-hover transition-colors cursor-pointer">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <!-- Cuerpo del Modal con Scroll Seguro -->
+      <div class="p-6 overflow-y-auto flex-1 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          @for (prod of allCriticalProducts(); track prod.id) {
+            <div class="p-3 bg-brand-bg border border-brand-border rounded-xl flex items-center justify-between gap-3 text-xs">
+              <div class="min-w-0">
+                <span class="block font-bold text-slate-200 truncate">{{ prod.name }}</span>
+                <span class="block text-[10px] text-slate-500 font-mono mt-0.5">SKU: {{ prod.sku }} | Min: {{ prod.minStock }}</span>
+              </div>
+              <span [class.bg-status-danger/10]="prod.status === 'Crítico'" [class.text-status-danger]="prod.status === 'Crítico'"
+                    [class.bg-status-warning/10]="prod.status === 'Bajo'" [class.text-status-warning]="prod.status === 'Bajo'"
+                    class="px-2 py-1 border border-white/5 rounded-lg font-mono font-black text-center shrink-0">
+                {{ prod.stock }} uds
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Barra de Acciones del Modal -->
+      <div class="p-4 bg-brand-bg/40 border-t border-brand-border flex items-center justify-end">
+        <button (click)="closeAlertsModal()" type="button" class="px-4 py-2 bg-brand-hover text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition-all cursor-pointer">Cerrar Reporte</button>
+      </div>
+    </div>
+  </div>
+}

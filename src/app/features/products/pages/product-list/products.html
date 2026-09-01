@@ -108,9 +108,9 @@
                           <div
                             class="w-9 h-9 rounded-xl border border-brand-border bg-brand-bg flex items-center justify-center overflow-hidden shrink-0 shadow-xs"
                           >
-                            @if (prod.imageUrl) {
+                            @if (prod.imageurl) {
                               <img
-                                [src]="prod.imageUrl"
+                                [src]="prod.imageurl"
                                 [alt]="prod.name"
                                 class="w-full h-full object-cover"
                               />
@@ -152,15 +152,21 @@
                       <!-- Barra de Existencias Dinámica -->
                       <td class="py-3.5 pr-4">
                         <div class="flex items-center gap-2.5">
-                          <span class="font-semibold font-mono text-xs min-w-5 text-right">{{
-                            prod.stock
-                          }}</span>
+                          <span class="font-semibold font-mono text-xs min-w-5 text-right">
+                            {{ prod.stock }}
+                          </span>
                           <div
                             class="w-full h-1.5 bg-brand-bg rounded-full overflow-hidden border border-brand-border/40"
                           >
                             <div
                               class="h-full rounded-full transition-all duration-500"
-                              [style.width.%]="prod.stock > 100 ? 100 : prod.stock"
+                              [style.width.%]="
+                                prod.minStock > 0
+                                  ? (prod.stock / prod.minStock) * 100 > 100
+                                    ? 100
+                                    : (prod.stock / prod.minStock) * 100
+                                  : 0
+                              "
                               [class.bg-status-success]="prod.status === 'Óptimo'"
                               [class.bg-status-warning]="prod.status === 'Bajo'"
                               [class.bg-status-danger]="prod.status === 'Crítico'"
@@ -189,9 +195,9 @@
                         class="py-3.5 text-right font-semibold text-white tracking-tight whitespace-nowrap tabular-nums pl-3"
                       >
                         {{
-                          prod.buyPrice.startsWith('$')
-                            ? prod.buyPrice
-                            : '$ ' + formatVisual(prod.buyPrice)
+                          prod.buyprice.startsWith('$')
+                            ? prod.buyprice
+                            : '$ ' + formatVisual(prod.buyprice)
                         }}
                       </td>
                       <td
@@ -221,15 +227,15 @@
       @for (prod of filteredProducts(); track prod.id) {
         <div
           (click)="productUpdate(prod.id)"
-          class="bg-brand-surface  rounded-2xl p-4 flex flex-col justify-between hover:border-brand-hover hover:scale-[1.02] transition-all cursor-pointer group shadow-sm"
+          class="bg-brand-surface rounded-2xl p-4 flex flex-col justify-between hover:border-brand-hover hover:scale-[1.02] transition-all cursor-pointer group shadow-sm"
         >
           <!-- Contenedor Cuadrado de Foto Grande de Lote -->
           <div
-            class="w-full aspect-square rounded-xl bg-brand-bg  flex items-center justify-center overflow-hidden mb-3 relative"
+            class="w-full aspect-square rounded-xl bg-brand-bg flex items-center justify-center overflow-hidden mb-3 relative"
           >
-            @if (prod.imageUrl) {
+            @if (prod.imageurl) {
               <img
-                [src]="prod.imageUrl"
+                [src]="prod.imageurl"
                 [alt]="prod.name"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />

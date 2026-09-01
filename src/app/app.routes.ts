@@ -12,6 +12,8 @@ import { STOCK_REPOSITORY } from './features/inventory/stock/data-access/stock.r
 import { SupabaseStockRepository } from './features/inventory/stock/data-access/supabase-stock.repository';
 import { SUPPLIER_REPOSITORY } from './features/suppliers/data-access/supplier.repository';
 import { SupabaseSupplierRepository } from './features/suppliers/data-access/supabase-supplier.repository';
+import { POS_REPOSITORY } from './features/pos/data-acces/pos.repository';
+import { SupabasePosRepository } from './features/pos/data-acces/supabase-pos.repository';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -21,10 +23,13 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
-        providers:[{provide:PRODUCT_REPOSITORY,useClass:SupabaseProductRepository},
-          {provide: STOCK_REPOSITORY,useClass:SupabaseStockRepository}
+        providers: [
+          { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
+          { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository },
+          { provide: POS_REPOSITORY, useClass: SupabasePosRepository }
         ],
-        loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
+        loadComponent: () =>
+          import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
       },
       // Importa las referencias que falten en las cabeceras de tu app.routes.ts:
 
@@ -35,7 +40,8 @@ export const routes: Routes = [
           { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
           { provide: CATEGORY_REPOSITORY, useClass: SupabaseCategoryRepository },
           { provide: BRAND_REPOSITORY, useClass: SupabaseBrandRepository }, // <-- NUEVO PROVEEDOR
-          { provide: UNIT_REPOSITORY, useClass: SupabaseUnitRepository }, // <-- NUEVO PROVEEDOR
+          { provide: UNIT_REPOSITORY, useClass: SupabaseUnitRepository },
+          {provide:SUPPLIER_REPOSITORY,useClass:SupabaseSupplierRepository} // <-- NUEVO PROVEEDOR
         ],
         children: [
           {
@@ -97,6 +103,14 @@ export const routes: Routes = [
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings').then((m) => m.SettingsComponent),
+      },
+      {
+        path: 'pos',
+        providers: [{ provide: POS_REPOSITORY, useClass: SupabasePosRepository }],
+        loadComponent: () =>
+          import('./features/pos/pages/pos-terminal.ts/pos-terminal').then(
+            (m) => m.PosTerminalComponent,
+          ),
       },
       {
         path: 'suppliers',
