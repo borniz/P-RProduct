@@ -1,10 +1,10 @@
-<header class="h-16 bg-ferremas-surface border-b border-ferremas-border flex items-center justify-between px-4 sm:px-6 lg:px-8 fixed top-0 right-0 left-0 lg:left-64 z-40 transition-all duration-300">
+<header class="h-16 bg-brand-surface border-b border-brand-border flex items-center justify-between px-4 sm:px-6 lg:px-8 fixed top-0 right-0 left-0 lg:left-64 z-40 transition-all duration-300">
   
   <div class="flex items-center gap-3 flex-1 max-w-xs sm:max-w-md">
     <!-- Botón Hamburguesa: Visible ÚNICAMENTE en móviles y tablets (< 1024px) -->
     <button (click)="toggleMenu.emit()" 
             type="button" 
-            class="p-2 -ml-1 text-slate-400 hover:text-white rounded-xl bg-ferremas-bg border border-ferremas-border lg:hidden transition-colors cursor-pointer">
+            class="p-2 -ml-1 text-slate-400 hover:text-white rounded-xl bg-brand-bg border border-brand-border lg:hidden transition-colors cursor-pointer">
       <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
       </svg>
@@ -18,24 +18,77 @@
         </svg>
       </span>
       <input type="text" placeholder="Buscar..." 
-             class="w-full bg-ferremas-bg border border-ferremas-border text-sm text-slate-200 pl-9 pr-4 py-2 rounded-xl focus:outline-none focus:border-status-info placeholder-slate-500 transition-colors">
+             class="w-full bg-brand-bg border border-brand-border text-sm text-slate-200 pl-9 pr-4 py-2 rounded-xl focus:outline-none focus:border-status-info placeholder-slate-500 transition-colors">
     </div>
   </div>
 
   <!-- Controles del Lado Derecho Compactos -->
   <div class="flex items-center gap-2 sm:gap-4 pl-3">
-    <!-- Centro de Alertas -->
-    <button class="p-2 text-slate-400 hover:text-white bg-ferremas-bg border border-ferremas-border rounded-xl relative transition-colors cursor-pointer">
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-      </svg>
-      <span class="absolute top-2 right-2 w-2 h-2 bg-status-danger rounded-full"></span>
-    </button>
+    
+    <!-- 🔔 CENTRO DE ALERTAS FLOTANTE INTERACTIVO -->
+    <div class="relative">
+      <!-- Botón Gatillo: Campana con Burbuja de Contador Reactivo -->
+      <button (click)="toggleNotifications()"
+              type="button"
+              class="p-2.5 relative text-slate-400 hover:text-white rounded-xl bg-brand-bg border border-brand-border transition-colors cursor-pointer group">
+        <svg class="w-5 h-5 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+        </svg>
+        
+        <!-- Burbuja de Alerta: Solo se dibuja si hay notificaciones pendientes -->
+        @if (alertCount() > 0) {
+          <span class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-status-danger px-1 text-[9px] font-bold font-mono text-white ring-2 ring-brand-surface animate-pulse">
+            {{ alertCount() }}
+          </span>
+        }
+      </button>
 
-    <div class="h-6 w-px bg-ferremas-border"></div>
+      <!-- Dropdown Flotante: Controlado perezosamente por la señal isNotificationOpen -->
+      @if (isNotificationOpen()) {
+        <div class="absolute right-0 mt-2.5 w-80 sm:w-96 bg-brand-surface border border-brand-border rounded-2xl p-4 space-y-4 shadow-2xl z-50 animate-fade-in text-left">
+          
+          <div class="flex items-center justify-between pb-2 border-b border-brand-border">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Alertas Operativas ({{ alertCount() }})</h3>
+            <span class="text-[9px] bg-brand-bg px-2 py-0.5 rounded-md text-slate-500 font-mono">Tiempo Real</span>
+          </div>
 
-    <!-- Selector de Sucursal Inteligente (Adapta su texto según el tamaño) -->
-    <button class="flex items-center gap-1.5 px-2.5 py-2 bg-ferremas-bg border border-ferremas-border rounded-xl text-xs sm:text-sm font-medium text-slate-200 hover:border-slate-700 transition-colors cursor-pointer">
+          <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin bg-ferremas-bg">
+            @for (notif of appNotifications(); track notif.id) {
+              <div class="p-3 bg-brand-bg/60 border rounded-xl flex items-start gap-2.5 transition-colors hover:bg-brand-hover/20"
+                   [class.border-status-danger/20]="notif.type === 'danger'"
+                   [class.border-status-warning/20]="notif.type === 'warning'"
+                   [class.border-status-info/20]="notif.type === 'info'">
+                
+                <!-- Indicador de Color Lateral Semántico -->
+                <span class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0"
+                      [class.bg-status-danger]="notif.type === 'danger'"
+                      [class.bg-status-warning]="notif.type === 'warning'"
+                      [class.bg-status-info]="notif.type === 'info'">
+                </span>
+
+                <div class="flex-1 space-y-0.5 text-[11px]">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-200"
+                          [class.text-status-danger]="notif.type === 'danger'">{{ notif.title }}</span>
+                    <span class="text-[9px] text-slate-500 font-mono">{{ notif.timeLabel }}</span>
+                  </div>
+                  <p class="text-slate-400 leading-relaxed">{{ notif.message }}</p>
+                </div>
+              </div>
+            } @empty {
+              <div class="py-8 text-center text-slate-500 text-xs">
+                No se registran quiebres de stock ni movimientos en el inventario.
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="h-6 w-px bg-brand-border"></div>
+
+    <!-- Selector de Sucursal Inteligente -->
+    <button class="flex items-center gap-1.5 px-2.5 py-2 bg-brand-bg border border-brand-border rounded-xl text-xs sm:text-sm font-medium text-slate-200 hover:border-slate-700 transition-colors cursor-pointer">
       <svg class="w-4 h-4 text-status-info shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72l1.189-1.19A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72M6.75 18h3.5a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75h-3.5a.75.75 0 00-.75.75v3.75c0 .414.336.75.75.75z" />
       </svg>
