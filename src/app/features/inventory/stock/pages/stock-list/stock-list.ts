@@ -3,11 +3,12 @@ import { STOCK_REPOSITORY } from '../../data-access/stock.repository';
 import { StockMovement } from '../../models/stock.model';
 import { PRODUCT_REPOSITORY } from '../../../../products/data-access/product.repository';
 import { RouterModule } from '@angular/router';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-stock-list',
   standalone: true,
-  imports: [RouterModule], 
+  imports: [RouterModule,NgClass], 
   templateUrl: './stock-list.html'
 })
 export class StockList {
@@ -73,7 +74,7 @@ export class StockList {
       quantity: finalQuantity,
       reason: this.reason().trim(),
       date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      operator: 'Carlos Méndez' // Operador de sesión activa
+      operator: 'Yarod Bonilla' // Operador de sesión activa
     };
 
     // 📌 ACTUALIZACIÓN EN CASCADA: Registra el movimiento en el Kardex

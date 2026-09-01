@@ -1,17 +1,28 @@
 <div class="flex relative min-h-[calc(100vh-8rem)]">
-  
   <!-- CONTENEDOR MAESTRO DE MOVIMIENTOS -->
   <div class="flex-1 space-y-7 transition-all duration-300" [class.pr-96]="isPanelOpen()">
-    
     <!-- Cabecera Operativa -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-white tracking-tight">Kardex de Movimientos</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Auditoría física, flujos de entrada y egresos de almacén</p>
+        <p class="text-sm text-slate-400 mt-0.5">
+          Auditoría física, flujos de entrada y egresos de almacén
+        </p>
       </div>
-      <button (click)="openPanel()" type="button"
-              class="sm:self-center px-4 py-2.5 bg-status-info hover:bg-status-info/90 text-white text-sm font-semibold rounded-xl transition-all shadow-md cursor-pointer inline-flex items-center justify-center gap-2">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+      <button
+        (click)="openPanel()"
+        type="button"
+        class="sm:self-center px-4 py-2.5 bg-status-info hover:bg-status-info/90 text-white text-sm font-semibold rounded-xl transition-all shadow-md cursor-pointer inline-flex items-center justify-center gap-2"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2.5"
+          stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
         <span>Registrar Movimiento</span>
       </button>
     </div>
@@ -19,9 +30,16 @@
     <!-- Filtros de Tipo de Operación -->
     <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
       @for (typeOpt of ['Todos', 'Ingreso', 'Egreso', 'Ajuste']; track typeOpt) {
-        <button (click)="onFilterChange(typeOpt)" type="button"
-                [class]="filterType() === typeOpt ? 'bg-status-info/15 border-status-info/40 text-white font-medium' : 'bg-brand-surface border-brand-border text-slate-400 hover:text-white'"
-                class="px-4 py-1.5 text-xs rounded-xl border transition-all cursor-pointer whitespace-nowrap">
+        <button
+          (click)="onFilterChange(typeOpt)"
+          type="button"
+          [class]="
+            filterType() === typeOpt
+              ? 'bg-status-info/15 border-status-info/40 text-white font-medium'
+              : 'bg-brand-surface border-brand-border text-slate-400 hover:text-white'
+          "
+          class="px-4 py-1.5 text-xs rounded-xl border transition-all cursor-pointer whitespace-nowrap"
+        >
           {{ typeOpt }}
         </button>
       }
@@ -32,7 +50,9 @@
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="border-b border-brand-border text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <tr
+              class="border-b border-brand-border text-[11px] font-bold text-slate-500 uppercase tracking-wider"
+            >
               <th class="pb-3 font-semibold w-28">ID Tracking</th>
               <th class="pb-3 font-semibold w-32">Fecha / Hora</th>
               <th class="pb-3 font-semibold text-center w-28">Tipo</th>
@@ -49,25 +69,38 @@
                 <td class="py-4 text-slate-400 font-mono text-xs">{{ mov.date }}</td>
                 <td class="py-4 text-center">
                   <!-- Píldora de Tipo de Movimiento Semántica -->
-                  <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border bg-brand-bg"
-                        [class.text-status-success]="mov.type === 'Ingreso'" [class.border-status-success/20]="mov.type === 'Ingreso'"
-                        [class.text-status-danger]="mov.type === 'Egreso'" [class.border-status-danger/20]="mov.type === 'Egreso'"
-                        [class.text-status-warning]="mov.type === 'Ajuste'" [class.border-status-warning/20]="mov.type === 'Ajuste'">
+                  <span
+                    class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border bg-brand-bg"
+                    [class.text-status-success]="mov.type === 'Ingreso'"
+                    [class.border-status-success/20]="mov.type === 'Ingreso'"
+                    [class.text-status-danger]="mov.type === 'Egreso'"
+                    [class.border-status-danger/20]="mov.type === 'Egreso'"
+                    [class.text-status-warning]="mov.type === 'Ajuste'"
+                    [class.border-status-warning/20]="mov.type === 'Ajuste'"
+                  >
                     {{ mov.type }}
                   </span>
                 </td>
                 <td class="py-4 font-medium text-white max-w-xs truncate">{{ mov.productName }}</td>
-                <td class="py-4 text-center font-bold font-mono text-xs"
-                    [class.text-status-success]="mov.quantity > 0"
-                    [class.text-status-danger]="mov.quantity < 0">
+                <td
+                  class="py-4 text-center font-bold font-mono text-xs"
+                  [class.text-status-success]="mov.quantity > 0"
+                  [class.text-status-danger]="mov.quantity < 0"
+                >
                   {{ mov.quantity > 0 ? '+' : '' }}{{ mov.quantity }}
                 </td>
-                <td class="py-4 text-slate-400 text-xs hidden md:table-cell max-w-xs truncate">{{ mov.reason }}</td>
-                <td class="py-4 text-right text-slate-500 text-xs hidden lg:table-cell truncate">{{ mov.operator }}</td>
+                <td class="py-4 text-slate-400 text-xs hidden md:table-cell max-w-xs truncate">
+                  {{ mov.reason }}
+                </td>
+                <td class="py-4 text-right text-slate-500 text-xs hidden lg:table-cell truncate">
+                  {{ mov.operator }}
+                </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="7" class="py-12 text-center text-slate-500 text-sm">No existen registros de movimientos bajo este filtro.</td>
+                <td colspan="7" class="py-12 text-center text-slate-500 text-sm">
+                  No existen registros de movimientos bajo este filtro.
+                </td>
               </tr>
             }
           </tbody>
@@ -78,27 +111,53 @@
 
   <!-- PANEL DESLIZANTE DE REGISTRO DIRECTO DE BODEGA -->
   @if (isPanelOpen()) {
-    <div class="fixed top-16 bottom-0 right-0 w-full sm:w-96 bg-brand-surface border-l border-brand-border p-6 shadow-2xl flex flex-col justify-between z-40 animate-slide-in">
+    <div
+      class="fixed top-16 bottom-0 right-0 w-full sm:w-96 bg-brand-surface border-l border-brand-border p-6 shadow-2xl flex flex-col justify-between z-40 animate-slide-in"
+    >
       <form (submit)="onSubmit($event)" class="space-y-5 flex-1 flex flex-col justify-between">
         <div class="space-y-5">
           <div class="flex items-center justify-between pb-3 border-b border-brand-border">
             <div>
-              <h2 class="text-base font-semibold text-white tracking-tight">Registrar Transacción</h2>
+              <h2 class="text-base font-semibold text-white tracking-tight">
+                Registrar Transacción
+              </h2>
               <p class="text-[11px] text-slate-500 mt-0.5">Entradas y salidas inmediatas físicas</p>
             </div>
-            <button (click)="closePanel()" type="button" class="text-slate-400 hover:text-white cursor-pointer p-1">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            <button
+              (click)="closePanel()"
+              type="button"
+              class="text-slate-400 hover:text-white cursor-pointer p-1"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
           @if (errorMessage()) {
-            <div class="p-3 bg-status-danger/10 border border-status-danger/20 rounded-xl text-xs font-semibold text-status-danger">{{ errorMessage() }}</div>
+            <div
+              class="p-3 bg-status-danger/10 border border-status-danger/20 rounded-xl text-xs font-semibold text-status-danger"
+            >
+              {{ errorMessage() }}
+            </div>
           }
 
           <!-- Selección del Artículo -->
           <div class="space-y-1">
-            <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Seleccionar Artículo *</label>
-            <select (change)="onSelectProduct($event)" [value]="selectedProductId()" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm cursor-pointer">
+            <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider"
+              >Seleccionar Artículo *</label
+            >
+            <select
+              (change)="onSelectProduct($event)"
+              [value]="selectedProductId()"
+              class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm cursor-pointer"
+            >
               @for (prod of products(); track prod.id) {
                 <option [value]="prod.id">{{ prod.name }} (Stock: {{ prod.stock }})</option>
               }
@@ -107,8 +166,14 @@
 
           <!-- Tipo de Operación -->
           <div class="space-y-1">
-            <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Tipo de Flujo *</label>
-            <select (change)="onSelectType($event)" [value]="movementType()" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm cursor-pointer">
+            <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider"
+              >Tipo de Flujo *</label
+            >
+            <select
+              (change)="onSelectType($event)"
+              [value]="movementType()"
+              class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm cursor-pointer"
+            >
               <option value="Ingreso">Ingreso (+ Aumenta existencias)</option>
               <option value="Egreso">Egreso (- Disminuye existencias)</option>
               <option value="Ajuste">Ajuste (Auditoría/Mermas)</option>
@@ -117,21 +182,56 @@
 
           <!-- Cantidad -->
           <div class="space-y-1">
-            <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Cantidad de Unidades *</label>
-            <input (input)="onInputQuantity($event)" [value]="quantity()" type="text" inputmode="numeric" placeholder="Ej: 15" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm font-mono" />
+            <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider"
+              >Cantidad de Unidades *</label
+            >
+            <input 
+    (input)="onInputQuantity($event)" 
+    [value]="quantity()" 
+    type="text" 
+    inputmode="numeric" 
+    placeholder="Ej: 15" 
+    class="w-full bg-brand-bg border border-brand-border px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm font-mono"
+    [ngClass]="{
+      'text-green-400 font-bold': movementType() === 'Ingreso',
+      'text-red-400 font-bold': movementType() === 'Egreso',
+      'text-slate-200': movementType() === 'Ajuste' || !movementType()
+    }"
+  />
           </div>
 
           <!-- Justificación -->
           <div class="space-y-1">
-            <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Motivo / Justificación *</label>
-            <input (input)="onInputReason($event)" [value]="reason()" type="text" placeholder="Ej: Lote de reposición según OC #342" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm" />
+            <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider"
+              >Motivo / Justificación *</label
+            >
+            <input
+              (input)="onInputReason($event)"
+              [value]="reason()"
+              type="text"
+              placeholder="Ej: Lote de reposición según OC #342"
+              class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info text-sm"
+            />
           </div>
         </div>
 
         <!-- Botonera -->
-        <div class="pt-4 border-t border-brand-border flex items-center justify-end gap-3 bg-brand-surface">
-          <button (click)="closePanel()" type="button" class="px-4 py-2.5 border border-brand-border text-slate-400 hover:text-white rounded-xl text-xs font-semibold hover:bg-brand-hover transition-all cursor-pointer">Cancelar</button>
-          <button type="submit" class="px-4 py-2.5 bg-status-info hover:bg-status-info/90 text-white rounded-xl text-xs font-semibold shadow-md transition-all cursor-pointer">Procesar Flujo</button>
+        <div
+          class="pt-4 border-t border-brand-border flex items-center justify-end gap-3 bg-brand-surface"
+        >
+          <button
+            (click)="closePanel()"
+            type="button"
+            class="px-4 py-2.5 border border-brand-border text-slate-400 hover:text-white rounded-xl text-xs font-semibold hover:bg-brand-hover transition-all cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2.5 bg-status-info hover:bg-status-info/90 text-white rounded-xl text-xs font-semibold shadow-md transition-all cursor-pointer"
+          >
+            Procesar Flujo
+          </button>
         </div>
       </form>
     </div>

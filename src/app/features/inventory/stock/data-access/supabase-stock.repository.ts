@@ -1,25 +1,86 @@
-import { Injectable, signal, Signal } from '@angular/core';
-import { StockRepository } from './stock.repository';
+import { Injectable, signal, Signal, inject } from '@angular/core';
+import { StockRepository, StockMovementDto } from './stock.repository';
 import { StockMovement } from '../models/stock.model';
+import { SupabaseService } from '../../../../core/services/supabase.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SupabaseStockRepository implements StockRepository {
-  // Historial simulado del Kardex de B&R Solutions con marcas temporales reales
-  private readonly _movements = signal<StockMovement[]>([
-    { id: 'MOV-001', productName: 'Rotomartillo Industrial 800W', type: 'Ingreso', quantity: 20, reason: 'Compra facturada a proveedor', date: '2026-08-31 09:15', operator: 'Carlos Méndez' },
-    { id: 'MOV-002', productName: 'Pernos de Anclaje 3/8" (x50)', type: 'Egreso', quantity: 5, reason: 'Despacho Venta POS Factura #1024', date: '2026-08-31 11:40', operator: 'Ana Martínez' },
-    { id: 'MOV-003', productName: 'Llave Alavesa Ajustable 12"', type: 'Ajuste', quantity: -2, reason: 'Pérdida/Mermas detectada en auditoría', date: '2026-08-31 16:20', operator: 'Carlos Méndez' },
-    { id: 'MOV-004', productName: 'Esmalte Sintético Gris 1 Galón', type: 'Ingreso', quantity: 10, reason: 'Reposición de stock central', date: '2026-09-01 08:10', operator: 'Juan Delgado' }
-  ]);
+  // Conexión nativa de la infraestructura de B&R Solutions
+  private readonly supabase = inject(SupabaseService).client;
+
+  // Estado reactivo del Kardex en memoria
+  private readonly _movements = signal<StockMovement[]>([]);
+
+  constructor() {
+    this.loadMovementsFromSupabase();
+  }
 
   getMovements(): Signal<StockMovement[]> {
     return this._movements.asReadonly();
   }
 
-  registerMovement(movement: StockMovement): void {
-    // Inserta el nuevo movimiento al tope del historial (Kardex inverso por fecha)
-    this._movements.update(current => [movement, ...current]);
+  // 📥 READ: Descarga el histórico de transacciones en vivo
+  async loadMovementsFromSupabase(): Promise<void> {
+    try {
+      const { data, error } = await this.supabase
+        .from('stock_movements')
+        .select('*')
+        .order('created_at', { ascending: false }); // Orden cronológico descendente inverso
+
+      if (error) throw error;
+
+      if (data) {
+        const mapped = (data as StockMovementDto[]).map(dto => this.mapToDomain(dto));
+        this._movements.set(mapped);
+      }
+    } catch (err) {
+      console.error('Error al descargar auditorías de Kardex desde Supabase:', err);
+    }
+  }
+
+  // 📤 CREATE: Inserta una fila física de movimiento en Postgres
+  async registerMovement(movement: StockMovement): Promise<void> {
+    try {
+      const dtoPayload = this.mapToDto(movement);
+
+      const { error } = await this.supabase
+        .from('stock_movements')
+        .insert([dtoPayload]);
+
+      if (error) throw error;
+
+      // Optimistic UI Update: Inyectamos el movimiento arriba de la lista en milisegundos
+      this._movements.update(current => [movement, ...current]);
+    } catch (err) {
+      console.error('Error al persistir movimiento en Supabase:', err);
+      throw err; // Re-lanzamos para que la UI pueda capturar fallos de red
+    }
+  }
+
+  // 📝 MAPPERS DE DESACOPLAMIENTO
+  private mapToDomain(dto: StockMovementDto): StockMovement {
+    return {
+      id: dto.id,
+      productName: dto.product_name,
+      type: dto.type,
+      quantity: dto.quantity,
+      reason: dto.reason,
+      // Usamos el campo created_at formateado de la base de datos o la fecha local
+      date: dto.created_at ? dto.created_at.replace('T', ' ').substring(0, 16) : new Date().toISOString().substring(0, 10),
+      operator: dto.operator
+    };
+  }
+
+  private mapToDto(model: StockMovement): StockMovementDto {
+    return {
+      id: model.id,
+      product_name: model.productName,
+      type: model.type,
+      quantity: model.quantity,
+      reason: model.reason,
+      operator: model.operator
+    };
   }
 }
