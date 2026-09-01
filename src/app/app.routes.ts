@@ -8,6 +8,10 @@ import { UNIT_REPOSITORY } from './features/inventory/units/data-access/unit.rep
 import { SupabaseUnitRepository } from './features/inventory/units/data-access/supabase-unit.repository';
 import { SupabaseCategoryRepository } from './features/inventory/categories/data-access/supabase-category.respository';
 import { BRAND_REPOSITORY } from './features/inventory/brands/data-access/brands.repository';
+import { STOCK_REPOSITORY } from './features/inventory/stock/data-access/stock.repository';
+import { SupabaseStockRepository } from './features/inventory/stock/data-access/supabase-stock.repository';
+import { SUPPLIER_REPOSITORY } from './features/suppliers/data-access/supplier.repository';
+import { SupabaseSupplierRepository } from './features/suppliers/data-access/supabase-supplier.repository';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -78,9 +82,26 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'inventorymov',
+        providers: [
+          { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository },
+          { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
+        ],
+        loadComponent: () =>
+          import('./features/inventory/stock/pages/stock-list/stock-list').then((m) => m.StockList),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings').then((m) => m.SettingsComponent),
+      },
+      {
+        path: 'suppliers',
+        providers: [{ provide: SUPPLIER_REPOSITORY, useClass: SupabaseSupplierRepository }],
+        loadComponent: () =>
+          import('./features/suppliers/pages/supplier-list/suppliers').then(
+            (m) => m.SupplierListComponent,
+          ),
       },
     ],
   },
