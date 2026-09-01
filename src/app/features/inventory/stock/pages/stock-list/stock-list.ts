@@ -74,7 +74,7 @@ export class StockList {
       quantity: finalQuantity,
       reason: this.reason().trim(),
       date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      operator: 'Yarod Bonilla' // Operador de sesión activa
+      operator: 'Yarod Bonilla' // se cambia de acuerdo al usuario
     };
 
     // 📌 ACTUALIZACIÓN EN CASCADA: Registra el movimiento en el Kardex

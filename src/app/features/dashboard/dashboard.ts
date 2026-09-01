@@ -1,45 +1,52 @@
-import { Component, signal } from '@angular/core';
-
-// Interfaz estricta para asegurar el tipado correcto de los indicadores clave
-interface KPI {
-  title: string;
-  value: string;
-  subtext: string;
-  trend?: string;
-  type: 'info' | 'success' | 'warning' | 'purple';
-}
-
-// Interfaz corporativa para el control de stock de la ferretería
-interface InventoryProduct {
-  name: string;
-  category: string;
-  stock: number;
-  minStock: number;
-  status: 'Óptimo' | 'Bajo' | 'Crítico';
-  price: string;
-}
+import { Component, computed, inject } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { PRODUCT_REPOSITORY } from '../products/data-access/product.repository';
+import { STOCK_REPOSITORY } from '../inventory/stock/data-access/stock.repository';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [], // No requiere CommonModule, el flujo de control nativo maneja todo en la plantilla
+  imports: [RouterModule], // Control Flow nativo
   templateUrl: './dashboard.html'
 })
-export class Dashboard {
-  // Canales reactivos para las tarjetas de métricas del ERP
-  readonly kpis = signal<KPI[]>([
-    { title: 'Ventas del mes', value: '$ 45.750.000', subtext: 'vs mes anterior', trend: '+ 12.5%', type: 'info' },
-    { title: 'Productos', value: '1.248', subtext: 'Activos en catálogo', type: 'success' },
-    { title: 'Stock bajo', value: '23', subtext: 'Artículos en alerta', type: 'warning' },
-    { title: 'Proveedores', value: '56', subtext: 'Cuentas activas', type: 'purple' }
-  ]);
+export class DashboardComponent {
+  // Inyección funcional de la capa de datos en vivo de Supabase
+  private readonly productService = inject(PRODUCT_REPOSITORY);
+  private readonly stockService = inject(STOCK_REPOSITORY);
 
-  // Colección reactiva para los artículos destacados en pantalla
-  readonly inventoryDestacado = signal<InventoryProduct[]>([
-    { name: 'Taladro Percutor 750W', category: 'Herramientas eléctricas', stock: 85, minStock: 15, status: 'Óptimo', price: '$ 89.900' },
-    { name: 'Tornillo Para Madera 1" (x100)', category: 'Fijaciones', stock: 120, minStock: 50, status: 'Óptimo', price: '$ 2.450' },
-    { name: 'Juego de Llaves Mixtas', category: 'Herramientas manuales', stock: 22, minStock: 25, status: 'Bajo', price: '$ 34.900' },
-    { name: 'Broca Concreto 8mm', category: 'Accesorios', stock: 4, minStock: 20, status: 'Crítico', price: '$ 1.250' },
-    { name: 'Esmeril Angular 4 1/2"', category: 'Herramientas eléctricas', stock: 40, minStock: 10, status: 'Óptimo', price: '$ 45.900' }
-  ]);
+  // Lectura directa de las señales reactivas de la nube
+  readonly products = this.productService.getProducts();
+  readonly movements = this.stockService.getMovements();
+
+  // 📊 MÉTRICA 1: Contador de productos totales en catálogo
+  readonly totalProductsCount = computed(() => this.products().length);
+
+  // 📊 MÉTRICA 2: Valorización total del inventario (Stock * Precio de compra)
+  readonly totalInventoryValue = computed(() => {
+    return this.products().reduce((total, prod) => {
+      // Limpiamos los caracteres de moneda ($) y puntos para la operación matemática pura
+      const cleanBuyPrice = Number(prod.buyPrice.replace(/[^0-9]/g, '')) || 0;
+      return total + (prod.stock * cleanBuyPrice);
+    }, 0);
+  });
+
+  // 📊 MÉTRICA 3: Contador de productos en alerta (Stock <= MinStock)
+  readonly criticalStockCount = computed(() => {
+    return this.products().filter(p => p.status === 'Crítico' || p.status === 'Bajo').length;
+  });
+
+  // 📊 MÉTRICA 4: Lista de los 4 movimientos más recientes del Kardex para el feed visual
+  readonly recentActivity = computed(() => {
+    return this.movements().slice(0, 4);
+  });
+
+  // 📊 MÉTRICA 5: Lista de productos en estado crítico para la tabla de alertas rápidas
+  readonly alertsList = computed(() => {
+    return this.products().filter(p => p.status === 'Crítico').slice(0, 3);
+  });
+
+  // --- MÉTODO GENÉRICO DE FORMATEO DE MONEDA MONO ---
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
+  }
 }

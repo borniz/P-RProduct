@@ -1,108 +1,216 @@
 <div class="space-y-7">
-  <!-- Encabezado de Sección Interna -->
+  <!-- Encabezado de Bienvenida Operativa -->
   <div>
-    <h1 class="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
-    <p class="text-sm text-slate-400 mt-0.5">Resumen general y estado operativo de la sucursal</p>
+    <h1 class="text-2xl font-bold text-white tracking-tight">Panel de Control</h1>
+    <p class="text-sm text-slate-400 mt-0.5">
+      Métricas de rendimiento e indicadores en tiempo real de B&R Solutions
+    </p>
   </div>
 
-  <!-- Rejilla de Tarjetas de Indicadores (KPIs) -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-    @for (card of kpis(); track card.title) {
-      <div class="bg-ferremas-surface border border-ferremas-border p-5 rounded-2xl flex items-center justify-between shadow-sm">
-        <div class="space-y-1">
-          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block">{{ card.title }}</span>
-          <h3 class="text-2xl font-bold text-white tracking-tight">{{ card.value }}</h3>
-          <div class="flex items-center gap-1.5 pt-0.5">
-            @if (card.trend) {
-              <span class="text-xs font-semibold text-status-success">{{ card.trend }}</span>
-            }
-            <span class="text-xs text-slate-500">{{ card.subtext }}</span>
-          </div>
-        </div>
-
-        <!-- Contenedor del Icono Vectorial con Color Temático Adaptable -->
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-ferremas-bg border border-ferremas-border"
-             [class.text-status-info]="card.type === 'info'"
-             [class.text-status-success]="card.type === 'success'"
-             [class.text-status-warning]="card.type === 'warning'"
-             [class.text-status-purple]="card.type === 'purple'">
-          @if (card.type === 'info') {
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797-2.101c.727.02.15.33.24.477A2.25 2.25 0 0 1 20.25 19.25h-16.5A2.25 2.25 0 0 1 2.25 17.1V3.375c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125V3.75" /></svg>
-          } @else if (card.type === 'success') {
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 7.5v9a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5v-9Z" /></svg>
-          } @else if (card.type === 'warning') {
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
-          } @else {
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
-          }
-        </div>
+  <!-- TARJETAS DE INDICADORES CLAVE (KPIs BI-DIRECCIONALES) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    <!-- KPI 1: Total de SKU Indexados -->
+    <div
+      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group"
+    >
+      <div class="p-3 rounded-xl bg-status-info/10 text-status-info border border-status-info/10">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+          />
+        </svg>
       </div>
-    }
-  </div>
-
-  <!-- Panel Operativo Principal: Tabla de Monitoreo de Existencias -->
-  <div class="bg-ferremas-surface border border-ferremas-border rounded-2xl p-6 shadow-sm">
-    <div class="flex items-center justify-between mb-5">
       <div>
-        <h2 class="text-base font-semibold text-white tracking-tight">Inventario destacado</h2>
-        <p class="text-xs text-slate-500 mt-0.5">Control de artículos de alta rotación y niveles críticos</p>
+        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider"
+          >Productos en Catálogo</span
+        >
+        <span
+          class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-info transition-colors"
+          >{{ totalProductsCount() }}</span
+        >
       </div>
-      <button class="text-xs font-semibold text-status-info hover:underline bg-transparent border-none cursor-pointer transition-all">
-        Ver catálogo completo →
-      </button>
     </div>
 
-    <!-- Estructura de Tabla Profesional Resguardada para Responsividad -->
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="border-b border-ferremas-border text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            <th class="pb-3 font-semibold">Producto</th>
-            <th class="pb-3 font-semibold">Categoría</th>
-            <th class="pb-3 font-semibold w-44">Nivel de Stock</th>
-            <th class="pb-3 font-semibold text-center w-24">Stock Mín.</th>
-            <th class="pb-3 font-semibold text-center w-28">Estado</th>
-            <th class="pb-3 font-semibold text-right w-28">Precio Base</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-ferremas-border/30 text-sm text-slate-300">
-          @for (prod of inventoryDestacado(); track prod.name) {
-            <tr class="hover:bg-ferremas-hover/20 transition-all duration-100 group">
-              <!-- Nombre -->
-              <td class="py-3.5 font-medium text-white max-w-xs truncate group-hover:text-status-info transition-colors pr-2">{{ prod.name }}</td>
-              <!-- Categoría -->
-              <td class="py-3.5 text-slate-400 text-xs px-3">{{ prod.category }}</td>
-              <!-- Barra de Stock Porcentual con Límites Controlados -->
-              <td class="py-3.5 pr-6 text-center">
-                <div class="flex items-center gap-3 text-center pl-2">
-                  <span class="font-semibold font-mono text-xs min-w-6 text-right">{{ prod.stock }}</span>
-                  <div class="w-full h-1.5 bg-ferremas-bg rounded-full overflow-hidden border border-ferremas-border/40">
-                    <div class="h-full rounded-full transition-all duration-500 px-5"
-                         [style.width.%]="prod.stock > 100 ? 100 : prod.stock"
-                         [class.bg-status-success]="prod.status === 'Óptimo'"
-                         [class.bg-status-warning]="prod.status === 'Bajo'"
-                         [class.bg-status-danger]="prod.status === 'Crítico'">
+    <!-- KPI 2: Capital Total Invertido en Lotes (Calculado en Vivo) -->
+    <div
+      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group"
+    >
+      <div
+        class="p-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/10"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 6v12m-3-2.818l.879.659c1.171.659 3.07.659 4.242 0 1.172-.659 1.172-1.728 0-2.387-.448-.252-1.072-.472-1.734-.613m-3.006 0c-.662-.141-1.286-.361-1.734-.613-1.172-.659-1.172-1.728 0-2.387 1.171-.659 3.07-.659 4.242 0l.878.659M4.5 6h15"
+          />
+        </svg>
+      </div>
+      <div>
+        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider"
+          >Valorización de Almacén</span
+        >
+        <span
+          class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-success transition-colors"
+          >{{ formatCurrency(totalInventoryValue()) }}</span
+        >
+      </div>
+    </div>
+
+    <!-- KPI 3: Alertas de Quiebre de Stock Activas -->
+    <div
+      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group sm:col-span-2 lg:col-span-1"
+    >
+      <div
+        class="p-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/10"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+          />
+        </svg>
+      </div>
+      <div>
+        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider"
+          >Productos en Alerta</span
+        >
+        <span
+          class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-danger transition-colors"
+          >{{ criticalStockCount() }}</span
+        >
+      </div>
+    </div>
+  </div>
+  <!-- DISTRIBUCIÓN HÍBRIDA DE MONITOREO DE OPERACIONES -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- PANEL IZQUIERDO: SEGUIMIENTO DE QUIEBRE DE STOCK -->
+    <div
+      class="lg:col-span-2 bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4"
+    >
+      <div>
+        <h2 class="text-base font-semibold text-white tracking-tight">
+          Alertas de Reabastecimiento Crítico
+        </h2>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Artículos que alcanzaron o superaron el umbral de stock mínimo de seguridad
+        </p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr
+              class="border-b border-brand-border text-[10px] font-bold text-slate-500 uppercase tracking-wider"
+            >
+              <th class="pb-2 font-semibold">Producto</th>
+              <th class="pb-2 font-semibold">Categoría</th>
+              <th class="pb-2 font-semibold text-center w-24">Stock Actual</th>
+              <th class="pb-2 font-semibold text-center w-24">Mínimo</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-brand-border/20 text-slate-300">
+            @for (alert of alertsList(); track alert.id) {
+              <tr class="hover:bg-brand-hover/10 transition-colors duration-75">
+                <td class="py-3 font-medium text-white truncate max-w-[160px]">{{ alert.name }}</td>
+                <td class="py-3 text-xs text-slate-400">{{ alert.category }}</td>
+                <td class="py-3 text-center font-bold font-mono text-xs text-status-danger">
+                  {{ alert.stock }} uds
+                </td>
+                <td class="py-3 text-center font-mono text-xs text-slate-500">
+                  {{ alert.minStock }} uds
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="py-10 text-center text-slate-500 text-xs">
+                  ¡Felicidades! No se registran productos en quiebre crítico de stock en este
+                  momento.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PANEL DERECHO: MONITOR HISTÓRICO DE OPERACIONES KARDEX (FEED VIVO) -->
+    <div class="bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4">
+      <div>
+        <h2 class="text-base font-semibold text-white tracking-tight">
+          Últimos Movimientos de Bodega
+        </h2>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Bitácora de auditoría en tiempo real conectada a la nube
+        </p>
+      </div>
+
+      <div class="flow-root">
+        <ul class="-mb-8">
+          @for (mov of recentActivity(); track mov.id; let last = $last) {
+            <li>
+              <div class="relative pb-6">
+                <!-- Línea de conexión cronológica vertical (se oculta en el último elemento) -->
+                @if (!last) {
+                  <span
+                    class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-brand-border"
+                    aria-hidden="true"
+                  ></span>
+                }
+                <div class="relative flex space-x-3">
+                  <!-- Indicador de Punto de Color según el Tipo de Flujo -->
+                  <div>
+                    <span
+                      [class.bg-status-success]="mov.type === 'Ingreso'"
+                      [class.bg-status-danger]="mov.type === 'Egreso'"
+                      [class.bg-status-warning]="mov.type === 'Ajuste'"
+                      class="h-8 w-8 rounded-xl flex items-center justify-center ring-4 ring-brand-surface border border-white/5 shadow-inner"
+                    >
+                      <!-- Icono vectorial compacto representativo -->
+                      <svg
+                        class="w-3.5 h-3.5 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2.5"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                  <!-- Detalle de la Transacción del Almacén -->
+                  <div class="flex-1 min-w-0 pt-0.5">
+                    <p class="text-xs font-semibold text-slate-200 truncate">
+                      {{ mov.productName }}
+                    </p>
+                    <p class="text-[11px] text-slate-400 mt-0.5 truncate">
+                      <span class="font-medium text-slate-300">{{ mov.type }}:</span>
+                      {{ mov.reason }}
+                    </p>
+                    <div
+                      class="flex items-center justify-between text-[10px] text-slate-500 font-mono mt-1"
+                    >
+                      <span>{{ mov.date }}</span>
+                      <span class="font-medium text-slate-400">{{ mov.operator }}</span>
                     </div>
                   </div>
                 </div>
-              </td>
-              <!-- Mínimo -->
-              <td class="py-3.5 text-center text-slate-400 font-mono text-xs px-2">{{ prod.minStock }}</td>
-              <!-- Estado Estilizado con Bordes de Alerta Diluidos -->
-              <td class="py-3.5 text-center px-2">
-                <span class="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border bg-ferremas-bg/80 px-3"
-                      [class.text-status-success]="prod.status === 'Óptimo'" [class.border-status-success/20]="prod.status === 'Óptimo'"
-                      [class.text-status-warning]="prod.status === 'Bajo'" [class.border-status-warning/20]="prod.status === 'Bajo'"
-                      [class.text-status-danger]="prod.status === 'Crítico'" [class.border-status-danger/20]="prod.status === 'Crítico'">
-                  {{ prod.status }}
-                </span>
-              </td>
-              <!-- Precio -->
-              <td class="py-3.5 text-right font-semibold text-white tracking-tight px-4 whitespace-nowrap tabular-nums">{{ prod.price }}</td>
-            </tr>
+              </div>
+            </li>
+          } @empty {
+            <div class="py-12 text-center text-slate-500 text-xs">
+              No se registran transacciones recientes en el Kardex centralizado.
+            </div>
           }
-        </tbody>
-      </table>
+        </ul>
+      </div>
     </div>
   </div>
 </div>

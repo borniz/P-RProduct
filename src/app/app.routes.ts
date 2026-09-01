@@ -21,7 +21,10 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
-        loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
+        providers:[{provide:PRODUCT_REPOSITORY,useClass:SupabaseProductRepository},
+          {provide: STOCK_REPOSITORY,useClass:SupabaseStockRepository}
+        ],
+        loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
       },
       // Importa las referencias que falten en las cabeceras de tu app.routes.ts:
 
