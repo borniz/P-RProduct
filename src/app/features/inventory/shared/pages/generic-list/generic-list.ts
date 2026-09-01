@@ -40,11 +40,13 @@ export class GenericListComponent {
   }
 
   openEditModal(item: GenericInventoryItem): void {
+
     this.selectedItem.set(item); // Seteamos el ítem para Modo Edición Dual
     this.isModalOpen.set(true);
   }
 
   onItemSaved(item: GenericInventoryItem): void {
+
     if (this.selectedItem()) {
       this.itemUpdated.emit(item); // Despacha actualización
     } else {

@@ -1,9 +1,9 @@
 import { InjectionToken, Signal } from '@angular/core';
-import { GenericInventoryItem } from '../../shared/models/generic-inventory.model';
+import { GenericInventoryItem, GenericUnitItem } from '../../shared/models/generic-inventory.model';
 
 export interface UnitRepository {
-  getUnits(): Signal<GenericInventoryItem[]>;
-  addUnit(unit: GenericInventoryItem): void;
-  updateUnit(unit: GenericInventoryItem): void;
+  getUnits(): Signal<GenericUnitItem[]>;
+  addUnit(unit: GenericUnitItem): void;
+  updateUnit(unit: GenericUnitItem): void;
 }
 export const UNIT_REPOSITORY = new InjectionToken<UnitRepository>('UnitRepository');

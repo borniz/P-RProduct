@@ -56,7 +56,6 @@ export class GenericFormModalComponent implements OnInit {
       metricCount: this.isEditMode() ? this.itemToEdit()!.metricCount : 0,
       isActive: true
     };
-
     this.saveItem.emit(payload);
   }
 }

@@ -1,18 +1,33 @@
 export interface GenericInventoryItem {
   id: string;
-  code: string;        // Código Identificador (Ej: INV-HELE, MC-BOSCH, UN-KG)
-  name: string;        // Nombre comercial
-  description?: string; // Detalle u origen corporativo
-  metricCount?: number; // Contador dinámico (Muestra 'Productos', 'Proveedores' o queda oculto)
+  code: string;
+  name: string;
+  description?: string;
+  metricCount?: number;
+  isActive: boolean;
+}
+export interface GenericUnitItem{
+  id: string;
+  code: string;
+  name: string;
   isActive: boolean;
 }
 
-// Configuración de metadatos para que el componente genérico sepa qué textos imprimir
+// 📌 NUEVO DTO UNIFICADO PARA POSTGRESQL
+export interface GenericDto {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  metric_count: number;
+  is_active: boolean;
+}
+
 export interface ModuleMetadata {
-  entityName: string;       // Ej: 'Categoría', 'Marca', 'Unidad de Medida'
-  pluralName: string;       // Ej: 'Categorías', 'Marcas', 'Unidades de Medida'
-  subtitle: string;         // Descripción operativa del encabezado
-  metricLabel: string;      // Nombre de la columna de control (Ej: 'Productos Vinculados')
-  hasDescription: boolean;  // Interruptor para ocultar o mostrar el campo de texto largo
-  descriptionPlaceholder: string; // Marcador del área de texto
+  entityName: string;
+  pluralName: string;
+  subtitle: string;
+  metricLabel: string;
+  hasDescription: boolean;
+  descriptionPlaceholder: string;
 }

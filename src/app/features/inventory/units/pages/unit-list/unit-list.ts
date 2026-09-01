@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { GenericListComponent } from '../../../shared/pages/generic-list/generic-list';
-import { ModuleMetadata, GenericInventoryItem } from '../../../shared/models/generic-inventory.model';
+import { ModuleMetadata,  GenericUnitItem } from '../../../shared/models/generic-inventory.model';
 import { UNIT_REPOSITORY } from '../../data-access/unit.repository';
 
 @Component({
@@ -24,6 +24,9 @@ export class UnitListComponent {
     descriptionPlaceholder: ''
   };
 
-  onAdd(item: GenericInventoryItem): void { this.unitRepo.addUnit(item); }
-  onUpdate(item: GenericInventoryItem): void { this.unitRepo.updateUnit(item); }
+  onAdd(item: GenericUnitItem): void { 
+    this.unitRepo.addUnit(item); 
+    console.log(item)
+  }
+  onUpdate(item: GenericUnitItem): void { this.unitRepo.updateUnit(item);alert(`las unidades que entran son ${item}`) }
 }

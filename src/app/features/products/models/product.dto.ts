@@ -8,7 +8,7 @@ export interface ProductDto {
   current_stock: number;
   minimum_stock: number;
   inventory_status: 'Óptimo' | 'Bajo' | 'Crítico';
-  buyPrice: string;
+  buyprice: string;
   unit_price: string;
-  imageUrl?: string;
+  imageurl?: string;
 }

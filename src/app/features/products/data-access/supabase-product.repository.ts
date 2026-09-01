@@ -1,136 +1,120 @@
-import { Injectable, signal, Signal } from '@angular/core';
+import { Injectable, signal, Signal, inject } from '@angular/core';
 import { ProductRepository } from './product.repository';
 import { Product } from '../models/product.model';
 import { ProductDto } from '../models/product.dto';
+import { SupabaseService } from '../../../core/services/supabase.service';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class SupabaseProductRepository implements ProductRepository {
-  // Simulación de respuesta cruda de Supabase (Mesa de pruebas aislada)
-    private readonly rawSupabaseData: ProductDto[] = [
-    {
-      id: '1',
-      sku_id: 'HER-TL750',
-      product_name: 'Taladro Percutor 750W',
-      category_name: 'Herramientas eléctricas',
-      current_stock: 85,
-      minimum_stock: 15,
-      inventory_status: 'Óptimo',
-      buyPrice: '$ 15.000',
-      unit_price: '$ 89.900',
-      imageUrl: 'https://unsplash.com'
-    },
-    {
-      id: '2',
-      sku_id: 'FIJ-TR100',
-      product_name: 'Tornillo Para Madera 1" (x100)',
-      category_name: 'Fijaciones',
-      current_stock: 120,
-      minimum_stock: 50,
-      inventory_status: 'Óptimo',
-      buyPrice: '$ 15.000',
-      unit_price: '$ 2.450',
-      imageUrl: 'https://unsplash.com'
-    },
-    {
-      id: '3',
-      sku_id: 'HER-LLM22',
-      product_name: 'Juego de Llaves Mixtas',
-      category_name: 'Herramientas manuales',
-      current_stock: 22,
-      minimum_stock: 25,
-      inventory_status: 'Bajo',
-      buyPrice: '$ 15.000',
-      unit_price: '$ 34.900',
-      imageUrl: 'https://unsplash.com'
-    },
-    {
-      id: '4',
-      sku_id: 'ACC-BR008',
-      product_name: 'Broca Concreto 8mm',
-      category_name: 'Accesorios',
-      current_stock: 4,
-      minimum_stock: 20,
-      inventory_status: 'Crítico',
-      buyPrice: '$ 15.000',
-      unit_price: '$ 1.250',
-      imageUrl: 'https://unsplash.com'
-    },
-    {
-      id: '5',
-      sku_id: 'HER-ES412',
-      product_name: 'Esmeril Angular 4 1/2"',
-      category_name: 'Herramientas eléctricas',
-      current_stock: 40,
-      minimum_stock: 10,
-      inventory_status: 'Óptimo',
-      buyPrice: '$ 15.000',
-      unit_price: '$ 45.900',
-      imageUrl: 'https://unsplash.com'
-    },
-    {
-      id: '6',
-      sku_id: 'SEG-GA002',
-      product_name: 'Gafas de Seguridad Transparentes',
-      category_name: 'Protección personal',
-      current_stock: 15,
-      minimum_stock: 30,
-      inventory_status: 'Bajo',
-      buyPrice: '$ 15.000',
-      unit_price: '$ 5.900',
-      imageUrl: 'https://unsplash.com'
-    },
-    {
-      id: '7',
-      sku_id: 'PIN-LT001',
-      product_name: 'Pintura Látex Blanca 1 Galón',
-      category_name: 'Pinturas',
-      current_stock: 2,
-      minimum_stock: 8,
-      inventory_status: 'Crítico',
-      buyPrice: '$ 15.000',
-      unit_price: '$ 18.500',
-      imageUrl: 'https://unsplash.com'
-    }
-  ];
+  // Inyectamos la conexión global de Supabase
+  private readonly supabase = inject(SupabaseService).client;
 
+  // Estado reactivo maestro en memoria (Inicia vacío hasta que responda la red)
+  private readonly _products = signal<Product[]>([]);
 
-  // Instanciamos el Signal transformando los registros mediante el mapeador de la arquitectura
-  private readonly _products = signal<Product[]>(
-    this.rawSupabaseData.map((dto) => this.mapToDomain(dto)),
-  );
+  constructor() {
+    // Disparamos la carga inicial de datos de forma automática al instanciar el ERP
+    this.loadProductsFromSupabase();
+  }
 
   getProducts(): Signal<Product[]> {
     return this._products.asReadonly();
   }
 
-  addProduct(product: Product): void {
-    this._products.update((current) => [product, ...current]);
-  }
-  // Agrega este método debajo de tu función addProduct:
-  updateProduct(updatedProduct: Product): void {
-    this._products.update((currentProducts) =>
-      currentProducts.map((prod) => (prod.id === updatedProduct.id ? updatedProduct : prod)),
-    );
+  // 📥 READ: Consulta real a la tabla 'products' de Supabase
+  async loadProductsFromSupabase(): Promise<void> {
+    try {
+      const { data, error } = await this.supabase
+        .from('products') // Nombre exacto de tu tabla en Supabase
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        // Mapeamos los DTOs de Postgres a las entidades del Dominio y actualizamos el Signal
+        const mappedProducts = (data as ProductDto[]).map(dto => this.mapToDomain(dto));
+        this._products.set(mappedProducts);
+      }
+    } catch (err) {
+      console.error('Error crítico al leer inventario desde Supabase:', err);
+    }
   }
 
-  // Mapper: Aísla la interfaz de las variaciones de nombres de columnas del backend
+  // 📤 CREATE: Inserción real en Supabase
+  async addProduct(product: Product): Promise<void> {
+    try {
+      // Convertimos el modelo de la UI al formato DTO (snake_case) que exige Postgres
+      const dtoPayload = this.mapToDto(product);
+
+      const { error } = await this.supabase
+        .from('products')
+        .insert([dtoPayload]);
+
+      if (error) throw error;
+
+      // Optimistic UI Update: Refrescamos la lista local de inmediato para máxima velocidad visual
+      this._products.update(current => [product, ...current]);
+    } catch (err) {
+      console.error('Error al insertar producto en Supabase:', err);
+    }
+  }
+
+  // 🔄 UPDATE: Modificación real por ID en Supabase
+  async updateProduct(product: Product): Promise<void> {
+    try {
+      const dtoPayload = this.mapToDto(product);
+
+      const { error } = await this.supabase
+        .from('products')
+        .update(dtoPayload)
+        .eq('id', product.id); // Cláusula WHERE de SQL estricta
+
+      if (error) throw error;
+
+      // Actualizamos la fila en el Signal local en milisegundos
+      this._products.update(current => 
+        current.map(p => p.id === product.id ? product : p)
+      );
+    } catch (err) {
+      console.error('Error al actualizar producto en Supabase:', err);
+    }
+  }
+
+  // 📝 MAPPERS PROFESIONALES DE DESACOPLAMIENTO
   private mapToDomain(dto: ProductDto): Product {
-  return {
-    id: dto.id,
-    sku: dto.sku_id ? dto.sku_id : 'SIN-SKU',
-    name: dto.product_name,
-    category: dto.category_name,
-    brand: dto.brand_name ? dto.brand_name : 'Sin Marca',   // 📌 ASIGNACIÓN DE MARCA REAL
-    unit: dto.unit_name ? dto.unit_name : 'Unidad',         // 📌 ASIGNACIÓN DE UNIDAD REAL
-    stock: dto.current_stock,
-    minStock: dto.minimum_stock,
-    status: dto.inventory_status,
-    buyPrice: dto.buyPrice,
-    price: dto.unit_price,
-    imageUrl: dto.imageUrl
-  };
-}
+    return {
+      id: dto.id,
+      sku: dto.sku_id || 'SIN-SKU',
+      name: dto.product_name,
+      category: dto.category_name,
+      brand: dto.brand_name || 'Sin Marca',
+      unit: dto.unit_name || 'Unidad',
+      stock: dto.current_stock,
+      minStock: dto.minimum_stock,
+      status: dto.inventory_status,
+      buyPrice: dto.buyprice,
+      price: dto.unit_price,
+      imageUrl: dto.imageurl
+    };
+  }
 
+  private mapToDto(model: Product): Partial<ProductDto> {
+    return {
+      id: model.id,
+      sku_id: model.sku === 'SIN-SKU' ? null : model.sku,
+      product_name: model.name,
+      category_name: model.category,
+      brand_name: model.brand,
+      unit_name: model.unit,
+      current_stock: model.stock,
+      minimum_stock: model.minStock,
+      inventory_status: model.status,
+      buyprice: model.buyPrice,
+      unit_price: model.price,
+      imageurl: model.imageUrl
+    };
+  }
 }
