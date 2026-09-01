@@ -209,7 +209,6 @@ export class ProductCreate implements OnInit {
       price: this.unitPrice().startsWith('$') ? this.unitPrice().trim() : `$ ${this.unitPrice().trim()}`,
       imageUrl: this.imagePreview() || undefined
     };
-      alert(`los datos que estamos entrando son${productPayload.name}`)
 
     if (this.isEditMode()) this.productService.updateProduct(productPayload);
     else this.productService.addProduct(productPayload);
