@@ -18,6 +18,8 @@ import { USER_REPOSITORY } from './features/users/data-access/user.repository';
 import { SupabaseUserRepository } from './features/users/data-access/supabase-user.repository';
 import { PRODUCT_REPOSITORY } from './features/products/data-access/product.repository';
 import { SupabaseProductRepository } from './features/products/data-access/supabase-product.repository';
+import { PURCHASE_REPOSITORY } from './features/purchases/data-access/purchase.repository';
+import { SupabasePurchaseRepository } from './features/purchases/data-access/supabase-purchase.repository';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -155,6 +157,19 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/dashboard/pages/advanced-stats/advanced-stats').then(
             (m) => m.AdvancedStatsComponent,
+          ),
+      },
+      {
+        path: 'inventory/purchases',
+        providers: [
+          { provide: PURCHASE_REPOSITORY, useClass: SupabasePurchaseRepository },
+          { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
+          { provide: SUPPLIER_REPOSITORY, useClass: SupabaseSupplierRepository },
+          { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository },
+        ],
+        loadComponent: () =>
+          import('./features/purchases/pages/purchase-order/purchase-order').then(
+            (m) => m.PurchaseOrderComponent,
           ),
       },
     ],

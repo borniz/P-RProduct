@@ -1,0 +1,298 @@
+<div class="space-y-7">
+  <!-- Encabezado Logístico -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div>
+      <h1 class="text-2xl font-bold text-white tracking-tight">
+        Abastecimiento y Órdenes de Compra
+      </h1>
+      <p class="text-sm text-slate-400 mt-0.5">
+        Gestión de reabastecimiento masivo de lotes, sugerencias automáticas de quiebre y recepción
+        de bodega
+      </p>
+    </div>
+    @if (errorMessage()) {
+      <div
+        class="p-3 bg-status-danger/10 border border-status-danger/20 rounded-xl text-xs font-semibold text-status-danger animate-fade-in max-w-sm"
+      >
+        {{ errorMessage() }}
+      </div>
+    }
+  </div>
+
+  <!-- GRILLA PRINCIPAL DOS COLUMNAS COMPARTIDAS (ELÁSTICA) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <!-- COLUMNA IZQUIERDA: REQUISICIÓN Y SUGERENCIAS ERP (OCUPA 7 COLUMNAS) -->
+    <div class="lg:col-span-7 space-y-4">
+      <!-- Selector de Cuentas de Proveedores Reales -->
+      <div
+        class="p-4 bg-brand-surface border border-brand-border/60 rounded-2xl space-y-2 shadow-xs"
+      >
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider"
+          >Paso 1: Seleccionar Proveedor para Abastecer</label
+        >
+        <select
+          (change)="onSelectSupplier($event)"
+          [value]="selectedSupplierName()"
+          class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors cursor-pointer font-medium text-xs"
+        >
+          <option value="" disabled selected>-- Elige un proveedor del catálogo --</option>
+          @for (sup of suppliers(); track sup.id) {
+            <option [value]="sup.name">{{ sup.name }} ({{ sup.code }})</option>
+          }
+        </select>
+      </div>
+
+      <!-- SUGERENCIAS INTELIGENTES: Solo se dibujan si hay un proveedor seleccionado -->
+      @if (selectedSupplierName()) {
+        <div
+          class="p-4 bg-brand-surface border border-brand-border/60 rounded-2xl space-y-3 animate-fade-in"
+        >
+          <div>
+            <h2
+              class="text-xs font-bold text-status-warning uppercase tracking-wider flex items-center gap-1.5"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-status-warning animate-pulse"></span>
+              Sugerencias Automáticas de Reabastecimiento
+            </h2>
+            <p class="text-[11px] text-slate-500 mt-0.5">
+              Artículos de este proveedor que superaron el stock mínimo o sufren quiebre crítico
+            </p>
+          </div>
+
+          <!-- Listado de Sugerencias Rápidas -->
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1 scrollbar-thin"
+          >
+            @for (prod of criticalSuggestedProducts(); track prod.id) {
+              <div
+                class="p-3 bg-brand-bg border border-brand-border/40 rounded-xl flex items-center justify-between gap-3 text-xs group hover:border-status-warning/40 transition-colors"
+              >
+                <div class="min-w-0">
+                  <span class="block font-bold text-slate-200 truncate">{{ prod.name }}</span>
+                  <span class="block text-[10px] text-slate-500 font-mono mt-0.5"
+                    >Stock Actual:
+                    <span class="text-status-danger font-bold">{{ prod.stock }}</span> / Min:
+                    {{ prod.minStock }}</span
+                  >
+                </div>
+                <button
+                  (click)="addSuggestedToOrder(prod, 20)"
+                  type="button"
+                  class="px-2.5 py-1.5 bg-status-warning/10 hover:bg-status-warning text-status-warning hover:text-slate-900 border border-status-warning/20 font-bold rounded-lg transition-all text-[11px] cursor-pointer whitespace-nowrap"
+                >
+                  + Pedir 20
+                </button>
+              </div>
+            } @empty {
+              <div class="col-span-full py-6 text-center text-slate-500 text-xs select-none">
+                ¡Felicidades! Todos los SKU de este proveedor se encuentran en niveles óptimos de
+                seguridad.
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Canasta / Detalle de la Orden en Construcción -->
+        <div
+          class="p-4 bg-brand-surface border border-brand-border/60 rounded-2xl space-y-3 animate-fade-in"
+        >
+          <div class="flex items-center justify-between pb-1 border-b border-brand-border/40">
+            <h2 class="text-xs font-bold text-white uppercase tracking-wider">
+              Ítems Incluidos en la Requisición ({{ purchaseCart().length }})
+            </h2>
+          </div>
+
+          <div class="space-y-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin">
+            @for (item of purchaseCart(); track item.product.id) {
+              <div
+                class="p-2.5 bg-brand-bg border border-brand-border/20 rounded-xl flex items-center justify-between gap-3 text-xs"
+              >
+                <div class="min-w-0">
+                  <span class="block font-semibold text-slate-200 truncate">{{
+                    item.product.name
+                  }}</span>
+                  <span class="block text-[10px] text-slate-500 font-mono mt-0.5"
+                    >{{ item.quantity }} uds x {{ formatVisual(item.costPrice) }} cost.</span
+                  >
+                </div>
+                <span class="font-bold text-white font-mono shrink-0">{{
+                  formatVisual(item.subtotal)
+                }}</span>
+              </div>
+            } @empty {
+              <div class="py-8 text-center text-slate-600 text-xs select-none">
+                No hay artículos agregados al lote de compra. Presiona el botón de sugerencias.
+              </div>
+            }
+          </div>
+
+          <!-- Resumen de Costos y Liquidación de Solicitud -->
+          @if (purchaseCart().length > 0) {
+            <div
+              class="pt-3 border-t border-brand-border/40 flex flex-col sm:flex-row items-center justify-between gap-3 bg-brand-surface animate-fade-in"
+            >
+              <div class="text-left w-full sm:w-auto">
+                <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider"
+                  >Total de la Orden (Costo Neto)</span
+                >
+                <span class="block text-xl font-bold text-status-success font-mono mt-0.5">{{
+                  formatVisual(orderTotal())
+                }}</span>
+              </div>
+              <button
+                (click)="placeOrder()"
+                type="button"
+                class="w-full sm:w-auto px-5 py-2.5 bg-status-success hover:bg-status-success/90 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2.5"
+                  stroke="currentColor"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <span>Generar Solicitud de Compra</span>
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <div
+          class="py-16 text-center text-slate-600 text-xs bg-brand-surface border border-brand-border rounded-2xl select-none"
+        >
+          Por favor, selecciona un proveedor en la parte superior para auditar sugerencias
+          operativas.
+        </div>
+      }
+    </div>
+    <!-- COLUMNA DERECHA: HISTORIAL Y RECEPCIÓN DE BODEGA (OCUPA 5 COLUMNAS) -->
+    <div
+      class="lg:col-span-5 bg-brand-surface border border-brand-border/80 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm min-h-[30rem]"
+    >
+      <div class="space-y-4 w-full">
+        <div class="pb-2 border-b border-brand-border">
+          <h2 class="text-sm font-bold text-white uppercase tracking-wider">
+            Bitácora de Órdenes Emitidas
+          </h2>
+          <p class="text-[11px] text-slate-500 mt-0.5">
+            Auditoría e ingreso físico de lotes de reabastecimiento en Supabase
+          </p>
+        </div>
+
+        <!-- Feed Cronológico de Órdenes Remotas -->
+        <div class="space-y-3 max-h-[calc(100vh-18rem)] overflow-y-auto pr-1 scrollbar-thin">
+          @for (ord of purchaseOrders(); track ord.id) {
+            <div
+              class="p-3.5 bg-brand-bg/60 border rounded-xl flex flex-col gap-2.5 animate-fade-in text-xs"
+              [class.border-status-info/20]="ord.status === 'Solicitado'"
+              [class.border-brand-border/60]="ord.status === 'Recibido'"
+            >
+              <!-- Encabezado de la Fila Histórica -->
+              <div class="flex items-center justify-between border-b border-brand-border/40 pb-1.5">
+                <div>
+                  <span class="block font-mono font-bold text-status-purple text-sm">{{
+                    ord.id
+                  }}</span>
+                  <span
+                    class="block text-[10px] text-slate-500 mt-0.5 font-medium truncate max-w-[150px]"
+                    >Prov: {{ ord.supplierName }}</span
+                  >
+                </div>
+                <span
+                  class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase border bg-brand-surface"
+                  [class.text-status-info]="ord.status === 'Solicitado'"
+                  [class.border-status-info/20]="ord.status === 'Solicitado'"
+                  [class.text-slate-500]="ord.status === 'Recibido'"
+                  [class.border-brand-border]="ord.status === 'Recibido'"
+                >
+                  {{ ord.status }}
+                </span>
+              </div>
+
+              <!-- Detalle compacto de materiales solicitados -->
+              <div class="space-y-1 text-[11px] text-slate-400">
+                @for (subItem of ord.items; track subItem.product.id) {
+                  <div class="flex items-center justify-between">
+                    <span class="truncate max-w-[180px] text-slate-300 font-medium">{{
+                      subItem.product.name
+                    }}</span>
+                    <span class="font-mono text-slate-500">+{{ subItem.quantity }} uds</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Pie Financiero con Gatillo de Entrada Física a Almacén -->
+              <div
+                class="flex items-center justify-between pt-1.5 border-t border-brand-border/30 font-bold select-none"
+              >
+                <div class="text-left">
+                  <span
+                    class="block text-[9px] font-semibold text-slate-600 font-sans tracking-wide"
+                    >Monto Neto Costo</span
+                  >
+                  <span class="font-mono text-white text-xs">{{
+                    formatVisual(ord.totalAmount)
+                  }}</span>
+                </div>
+
+                <!-- GATILLO REACTIVO COHESIVO: Solo se pinta si el lote no ha ingresado físicamente -->
+                @if (ord.status === 'Solicitado') {
+                  <button
+                    (click)="acceptIncomingDelivery(ord)"
+                    type="button"
+                    class="px-3 py-1.5 bg-status-success hover:bg-status-success/90 text-white font-bold rounded-lg transition-all text-[11px] cursor-pointer shadow-sm flex items-center gap-1"
+                  >
+                    <svg
+                      class="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2.5"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M4.5 12.75l6 6 9-13.5"
+                      />
+                    </svg>
+                    <span>Recibir Lote</span>
+                  </button>
+                } @else {
+                  <div
+                    class="flex flex-col text-right text-[9px] text-slate-500 font-mono font-medium"
+                  >
+                    <span>Recibió: {{ ord.operator }}</span>
+                    <span class="text-[8px] opacity-70">{{ ord.createdAt.substring(0, 10) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div
+              class="flex flex-col items-center justify-center h-48 text-center text-slate-600 space-y-2 select-none"
+            >
+              <svg
+                class="w-8 h-8 opacity-40"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+                />
+              </svg>
+              <p class="text-xs">
+                No se registran órdenes de compra masivas<br />emitidas en el historial del ERP.
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
