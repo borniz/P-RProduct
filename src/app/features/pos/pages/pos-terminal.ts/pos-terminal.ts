@@ -78,7 +78,6 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   }
 
   private resetAndReloadTerminal(): void {
-  console.log('🔄 Sincronizando existencias del POS de B&R Solutions en tiempo real...');
   
   // 1. Limpieza absoluta del estado del formulario local
   this.cart.set([]);
