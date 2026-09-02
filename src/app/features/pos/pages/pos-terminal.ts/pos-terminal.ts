@@ -1,8 +1,10 @@
 import { Component, signal, computed, inject } from '@angular/core';
 import { PRODUCT_REPOSITORY } from '../../../products/data-access/product.repository';
 import { POS_REPOSITORY } from '../../data-acces/pos.repository';
+import { STOCK_REPOSITORY } from '../../../inventory/stock/data-access/stock.repository'; // 📌 INYECTADO TOKEN KARDEX
 import { CartItem, SaleInvoice } from '../../models/pos.models';
 import { Product } from '../../../products/models/product.model';
+import { StockMovement } from '../../../inventory/stock/models/stock.model'; // 📌 INYECTADO MODELO KARDEX
 
 @Component({
   selector: 'app-pos-terminal',
@@ -13,6 +15,7 @@ import { Product } from '../../../products/models/product.model';
 export class PosTerminalComponent {
   private readonly productRepo = inject(PRODUCT_REPOSITORY);
   private readonly posRepo = inject(POS_REPOSITORY);
+  private readonly stockRepo = inject(STOCK_REPOSITORY); // 📌 INYECTADO EL REPOSITORIO DE BODEGA
 
   // 📦 Signals Core del Estado del Terminal POS
   readonly products = this.productRepo.getProducts();
@@ -122,7 +125,7 @@ export class PosTerminalComponent {
     await this.checkout();
   }
 
-  // 📥 Liquidación e Inserción de la Factura en Supabase en Bloque
+  // 📥 Liquidación e Inserción de la Factura en Supabase en Bloque con Auditoría Automatizada
   async checkout(): Promise<void> {
     if (this.cart().length === 0) return;
 
@@ -133,8 +136,10 @@ export class PosTerminalComponent {
           ? 'Tarjetas'
           : this.selectedPayment() as 'Efectivo' | 'Transferencia';
 
+      const saleId = `POS-${crypto.randomUUID().substring(0, 5).toUpperCase()}`;
+
       const invoice: SaleInvoice = {
-        id: `POS-${crypto.randomUUID().substring(0, 5).toUpperCase()}`,
+        id: saleId,
         items: this.cart(),
         subtotal: this.cartSubtotal(),
         tax: this.cartTax(),
@@ -144,7 +149,7 @@ export class PosTerminalComponent {
         operator: 'Carlos Mendez'
       };
 
-      // 1. Guardar registro histórico de la venta en Postgres
+      // 1. Guardar registro histórico de la venta en Postgres (Supabase)
       await this.posRepo.processSale(invoice);
 
       // 2. Descontar existencias físicas en bloque bajo la regla del 10% de alertas corporativas
@@ -159,15 +164,31 @@ export class PosTerminalComponent {
           nextStatus = 'Bajo';
         }
 
-        this.productRepo.updateProduct({
+        // Sincronizar stock y estado en la base de datos central
+        await this.productRepo.updateProduct({
           ...item.product,
           stock: nextStock,
           status: nextStatus
         });
+
+        // 📌 3. AUDITORÍA AUTOMÁTICA EN KARDEX CENTRALIZADO
+        // Registramos un movimiento por cada artículo procesado en la canasta
+        const automatedMovement: StockMovement = {
+          id: `MOV-${crypto.randomUUID().substring(0, 5).toUpperCase()}`,
+          productName: item.product.name,
+          type: 'Egreso', // Califica estrictamente como una salida del almacén
+          quantity: -item.quantity, // Multiplicado en negativo para efectos de auditoría
+          reason: `Despacho automático por Venta POS en Boleta de Venta #${saleId}`,
+          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          operator: invoice.operator
+        };
+
+        // Inyectamos a la cola asíncrona de la tabla 'stock_movements' de Supabase
+        await this.stockRepo.registerMovement(automatedMovement);
       }
 
       this.clearCart();
-      alert(`¡Venta procesada con éxito! Transacción: ${invoice.id}`);
+      alert(`¡Venta procesada y Kardex auditado con éxito! Transacción: ${invoice.id}`);
     } catch (err) {
       this.errorMessage.set('Error en el servidor central al procesar la venta. Inténtalo de nuevo.');
     }
