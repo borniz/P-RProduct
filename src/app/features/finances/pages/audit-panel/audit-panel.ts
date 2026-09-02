@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core'; // <-- Importado OnInit
+import { Component, inject, signal, computed, OnInit, effect } from '@angular/core'; // <-- Importado OnInit
 import { CASH_CLOSURE_REPOSITORY, CashClosure } from '../../data-access/cash-closure.repository';
 import { POS_REPOSITORY } from '../../../pos/data-acces/pos.repository';
 import { RouterModule } from '@angular/router';
