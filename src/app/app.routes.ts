@@ -16,6 +16,8 @@ import { SupabaseCashClosureRepository } from './features/finances/data-access/s
 import { CASH_CLOSURE_REPOSITORY } from './features/finances/data-access/cash-closure.repository';
 import { USER_REPOSITORY } from './features/users/data-access/user.repository';
 import { SupabaseUserRepository } from './features/users/data-access/supabase-user.repository';
+import { PRODUCT_REPOSITORY } from './features/products/data-access/product.repository';
+import { SupabaseProductRepository } from './features/products/data-access/supabase-product.repository';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -138,9 +140,22 @@ export const routes: Routes = [
       },
       {
         path: 'settings/users',
-        providers: [{ provide: USER_REPOSITORY, useClass: SupabaseUserRepository },],
+        providers: [{ provide: USER_REPOSITORY, useClass: SupabaseUserRepository }],
         loadComponent: () =>
           import('./features/users/pages/user-list/users').then((m) => m.UserListComponent),
+      },
+      // Registra la nueva ruta analítica avanzada dentro de los children del AppShell:
+      {
+        path: 'dashboard/analytics',
+        providers: [
+          { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
+          { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository },
+          { provide: POS_REPOSITORY, useClass: SupabasePosRepository },
+        ],
+        loadComponent: () =>
+          import('./features/dashboard/pages/advanced-stats/advanced-stats').then(
+            (m) => m.AdvancedStatsComponent,
+          ),
       },
     ],
   },
