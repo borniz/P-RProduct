@@ -172,6 +172,14 @@ export const routes: Routes = [
             (m) => m.PurchaseOrderComponent,
           ),
       },
+      {
+        path: 'inventory/reports',
+        providers: [{ provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository }],
+        loadComponent: () =>
+          import('./features/inventory/shared/pages/export-panel/export-panel').then(
+            (m) => m.ExportPanelComponent,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },
