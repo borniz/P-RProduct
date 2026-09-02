@@ -14,6 +14,8 @@ import { POS_REPOSITORY } from './features/pos/data-acces/pos.repository';
 import { SupabasePosRepository } from './features/pos/data-acces/supabase-pos.repository';
 import { SupabaseCashClosureRepository } from './features/finances/data-access/supabase-cash-closure.repository';
 import { CASH_CLOSURE_REPOSITORY } from './features/finances/data-access/cash-closure.repository';
+import { USER_REPOSITORY } from './features/users/data-access/user.repository';
+import { SupabaseUserRepository } from './features/users/data-access/supabase-user.repository';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -40,7 +42,7 @@ export const routes: Routes = [
           { provide: BRAND_REPOSITORY, useClass: SupabaseBrandRepository }, // <-- NUEVO PROVEEDOR
           { provide: UNIT_REPOSITORY, useClass: SupabaseUnitRepository },
           { provide: SUPPLIER_REPOSITORY, useClass: SupabaseSupplierRepository },
-          { provide:POS_REPOSITORY,useClass:SupabasePosRepository} // <-- NUEVO PROVEEDOR
+          { provide: POS_REPOSITORY, useClass: SupabasePosRepository }, // <-- NUEVO PROVEEDOR
         ],
         children: [
           {
@@ -133,6 +135,12 @@ export const routes: Routes = [
           import('./features/suppliers/pages/supplier-list/suppliers').then(
             (m) => m.SupplierListComponent,
           ),
+      },
+      {
+        path: 'settings/users',
+        providers: [{ provide: USER_REPOSITORY, useClass: SupabaseUserRepository }],
+        loadComponent: () =>
+          import('./features/users/pages/user-list/users').then((m) => m.UserListComponent),
       },
     ],
   },
