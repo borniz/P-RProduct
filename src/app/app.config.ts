@@ -12,7 +12,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
+    { provide: PRODUCT_REPOSITORY, useExisting: SupabaseProductRepository },
     { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository }
   ]
 };

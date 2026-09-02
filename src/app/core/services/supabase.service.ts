@@ -6,9 +6,22 @@ import { environment } from '../../../environments/environments';
   providedIn: 'root'
 })
 export class SupabaseService {
-  // Cliente oficial de conexión instanciado
-  readonly client: SupabaseClient = createClient(
-    environment.supabaseUrl,
-    environment.supabaseKey
-  );
+
+  readonly client: SupabaseClient;
+
+  constructor() {
+
+    this.client = createClient(
+      environment.supabaseUrl,
+      environment.supabaseKey,
+      {
+        realtime: {
+          params: {
+            eventsPerSecond: 10
+          }
+        }
+      }
+    );
+
+  }
 }

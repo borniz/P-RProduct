@@ -1,7 +1,5 @@
 import { Routes } from '@angular/router';
 import { AppShell } from './core/layout/app-shell/app-shell';
-import { PRODUCT_REPOSITORY } from './features/products/data-access/product.repository';
-import { SupabaseProductRepository } from './features/products/data-access/supabase-product.repository';
 import { CATEGORY_REPOSITORY } from './features/inventory/categories/data-access/category.repository';
 import { SupabaseBrandRepository } from './features/inventory/brands/data-access/supabase-brand.repository';
 import { UNIT_REPOSITORY } from './features/inventory/units/data-access/unit.repository';
@@ -26,7 +24,6 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         providers: [
-          { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
           { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository },
           { provide: POS_REPOSITORY, useClass: SupabasePosRepository },
         ],
@@ -39,7 +36,6 @@ export const routes: Routes = [
       {
         path: 'products',
         providers: [
-          { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
           { provide: CATEGORY_REPOSITORY, useClass: SupabaseCategoryRepository },
           { provide: BRAND_REPOSITORY, useClass: SupabaseBrandRepository }, // <-- NUEVO PROVEEDOR
           { provide: UNIT_REPOSITORY, useClass: SupabaseUnitRepository },
@@ -96,7 +92,6 @@ export const routes: Routes = [
         path: 'inventorymov',
         providers: [
           { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository },
-          { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
         ],
         loadComponent: () =>
           import('./features/inventory/stock/pages/stock-list/stock-list').then((m) => m.StockList),
