@@ -1,5 +1,6 @@
-import { Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core'; // 📌 Importado OnDestroy
-import { Router, NavigationEnd } from '@angular/router'; // 📌 Importados servicios de ruta
+import { Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { RouterModule } from '@angular/router'; // 📌 Importado para dar soporte a routerLink en la vista
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { PRODUCT_REPOSITORY } from '../../../products/data-access/product.repository';
@@ -10,20 +11,25 @@ import { Product } from '../../../products/models/product.model';
 import { StockMovement } from '../../../inventory/stock/models/stock.model';
 import { AuthService } from '../../../../core/services/auth.service';
 
+// 📌 IMPORTACIONES CORE DEL MOTOR DE ESCANEO ÓPTICO
+import { ZXingScannerModule } from '@zxing/ngx-scanner';
+import { BarcodeFormat } from '@zxing/library';
+
 @Component({
   selector: 'app-pos-terminal',
   standalone: true,
-  imports: [], 
-  templateUrl: './pos-terminal.html'
+  // 📌 SOLUCCIÓN INTEGRAL AL ERROR NG8001: Se inyecta el ZXingScannerModule dentro de los imports
+  imports: [RouterModule, ZXingScannerModule],
+  templateUrl: './pos-terminal.html',
 })
 export class PosTerminalComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly productRepo = inject(PRODUCT_REPOSITORY);
   private readonly posRepo = inject(POS_REPOSITORY);
   private readonly stockRepo = inject(STOCK_REPOSITORY);
-  private readonly router = inject(Router); // 📌 Inyectado el enrutador corporativo
+  private readonly router = inject(Router);
 
-  private navSubscription!: Subscription; // Variable para limpiar la memoria al salir
+  private navSubscription!: Subscription;
 
   // 📦 Signals Core del Estado del Terminal POS
   readonly products = this.productRepo.getProducts();
@@ -31,16 +37,27 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   readonly cart = signal<CartItem[]>([]);
   readonly errorMessage = signal<string>('');
   readonly selectedPayment = signal<'Efectivo' | 'Debito' | 'Credito' | 'Transferencia'>('Efectivo');
+  readonly isScannerActive = signal<boolean>(false);
 
   // 🔗 Puentes y Aliases reactivos de lectura para el archivo HTML
   readonly paymentMethod = this.selectedPayment.asReadonly();
   readonly totalCart = computed(() => this.cartTotal());
+  
+  // Formatos de códigos de barra industriales permitidos
+  readonly allowedFormats = [
+    BarcodeFormat.EAN_13,
+    BarcodeFormat.EAN_8,
+    BarcodeFormat.CODE_128,
+    BarcodeFormat.QR_CODE,
+  ];
 
   // 🔍 Filtro en tiempo real para el buscador predictivo por Nombre o SKU
   readonly filteredProducts = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
-    return this.products().filter(p => 
-      (p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query)) && p.stock > 0
+    return this.products().filter(
+      (p) =>
+        (p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query)) &&
+        p.stock > 0,
     );
   });
 
@@ -48,62 +65,95 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   readonly cartSubtotal = computed(() => {
     return this.cart().reduce((sum, item) => sum + item.subtotal, 0);
   });
-  readonly cartTax = computed(() => Math.round(this.cartSubtotal() * 0.19)); 
+  readonly cartTax = computed(() => Math.round(this.cartSubtotal() * 0.19));
   readonly cartTotal = computed(() => this.cartSubtotal() + this.cartTax());
 
-  // 🚀 ESCUCHA ACTIVA DE PESTAÑAS
+  // 🚀 ESCUCHA ACTIVA DE PESTAÑAS (Sincronización multilayout)
   ngOnInit(): void {
-  // 1. Carga inicial limpia al abrir la pantalla por primera vez
-  this.resetAndReloadTerminal();
+    this.resetAndReloadTerminal();
 
-  // 2. FILTRADO SEGURO: Escucha el cambio de pestaña, pero actúa SOLO si regresas al POS
-  this.navSubscription = this.router.events.pipe(
-    filter(event => event instanceof NavigationEnd)
-  ).subscribe((event: any) => {
-    // Obtenemos la URL actual limpia (ejemplo: '/inventory/pos')
-    const currentUrl = event.urlAfterRedirects || event.url;
-    
-    // 📌 Cambia '/pos' por la palabra exacta que tenga la URL de tu terminal de ventas
-    if (currentUrl.includes('/pos') || currentUrl.endsWith('terminal')) {
-      console.log('🔄 Sincronizando existencias del POS de B&R Solutions de forma segura...');
-      this.resetAndReloadTerminal();
-    }
-  });
-}
+    this.navSubscription = this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        const currentUrl = event.urlAfterRedirects || event.url;
+        if (currentUrl.includes('/pos') || currentUrl.endsWith('terminal')) {
+          console.log('🔄 Sincronizando existencias del POS de B&R Solutions de forma segura...');
+          this.resetAndReloadTerminal();
+        }
+      });
+  }
 
-
-  // 🧹 Liberación de memoria al destruir el layout
   ngOnDestroy(): void {
     if (this.navSubscription) {
       this.navSubscription.unsubscribe();
     }
   }
+  // 🚀 SOLUCCIÓN AL ERROR TS2345: Firma tipada como 'any' para recibir limpiamente el string del escáner
+  onBarcodeScanSuccess(scannedCode: any): void {
+    const codeString = String(scannedCode || '').trim().toUpperCase();
+    if (!codeString) return;
 
-  private resetAndReloadTerminal(): void {
-  
-  // 1. Limpieza absoluta del estado del formulario local
-  this.cart.set([]);
-  this.errorMessage.set('');
-  this.searchQuery.set('');
+    // Buscamos en caliente el producto en el catálogo cuyo SKU coincida con la lectura óptica
+    const matchedProduct = this.products().find(
+      (p) => p.sku.trim().toUpperCase() === codeString,
+    );
 
-  // 2. FORZAR REFRESCO DIRECTO DEL CONTENEDOR EN SUPABASE
-  // Evaluamos de manera segura qué método de actualización tiene programado tu repositorio de productos
-  if (typeof (this.productRepo as any).refreshProducts === 'function') {
-    (this.productRepo as any).refreshProducts();
-  } else if (typeof (this.productRepo as any).load === 'function') {
-    (this.productRepo as any).load();
-  } else if (typeof (this.productRepo as any).getItemsSignal === 'function') {
-    // Si tu servicio hereda de GenericSupabaseRepository, esto despertará al motor reactivo
-    (this.productRepo as any).getItemsSignal();
+    if (matchedProduct) {
+      // Si el artículo existe y tiene existencias, lo inyectamos directamente al carrito
+      this.addToCart(matchedProduct);
+
+      // Apagamos la cámara por usabilidad tras el escaneo exitoso
+      this.isScannerActive.set(false);
+      this.errorMessage.set('');
+
+      // Emitimos un sutil sonido nativo de confirmación (Beep)
+      this.playScanBeep();
+    } else {
+      this.errorMessage.set(
+        `Código [${codeString}] leído correctamente, pero no está asignado a ningún producto en el catálogo.`,
+      );
+    }
   }
 
-  // 3. TRUCO DE RE-RENDERIZADO (Fallback de Seguridad)
-  // Forzamos un micro-parpadeo en la query de búsqueda para obligar al 'computed'
-  // de filteredProducts a volver a ejecutarse y redibujar el catálogo en la pantalla
-  const currentQuery = this.searchQuery();
-  this.searchQuery.set(' '); 
-  setTimeout(() => this.searchQuery.set(currentQuery), 50);
-}
+  private playScanBeep(): void {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+    } catch (e) {
+      console.log('Audio no soportado en este dispositivo');
+    }
+  }
+
+  toggleCameraScanner(): void {
+    this.isScannerActive.update((current) => !current);
+    this.errorMessage.set('');
+  }
+
+  private resetAndReloadTerminal(): void {
+    this.cart.set([]);
+    this.errorMessage.set('');
+    this.searchQuery.set('');
+
+    if (typeof (this.productRepo as any).refreshProducts === 'function') {
+      (this.productRepo as any).refreshProducts();
+    } else if (typeof (this.productRepo as any).load === 'function') {
+      (this.productRepo as any).load();
+    } else if (typeof (this.productRepo as any).getItemsSignal === 'function') {
+      (this.productRepo as any).getItemsSignal();
+    }
+
+    const currentQuery = this.searchQuery();
+    this.searchQuery.set(' ');
+    setTimeout(() => this.searchQuery.set(currentQuery), 50);
+  }
 
   updateSearch(event: Event): void {
     this.searchQuery.set((event.target as HTMLInputElement).value);
@@ -115,15 +165,16 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
 
   addToCart(product: Product): void {
     const currentCart = this.cart();
-    const existingItem = currentCart.find(item => item.product.id === product.id);
-    const cleanPrice = typeof product.price === 'number' 
-      ? product.price 
-      : Number((product.price as string).replace(/[^0-9]/g, '')) || 0;
+    const existingItem = currentCart.find((item) => item.product.id === product.id);
+    const cleanPrice =
+      typeof product.price === 'number'
+        ? product.price
+        : Number((product.price as string).replace(/[^0-9]/g, '')) || 0;
 
     if (existingItem) {
       this.updateItemQuantity(product.id, existingItem.quantity + 1);
     } else {
-      this.cart.update(items => [...items, { product, quantity: 1, subtotal: cleanPrice }]);
+      this.cart.update((items) => [...items, { product, quantity: 1, subtotal: cleanPrice }]);
       this.errorMessage.set('');
     }
   }
@@ -132,25 +183,28 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     if (isNaN(newQuantity) || newQuantity < 1) return;
 
     const currentCart = this.cart();
-    const cartItem = currentCart.find(item => item.product.id === productId);
+    const cartItem = currentCart.find((item) => item.product.id === productId);
     if (!cartItem) return;
 
     if (newQuantity > cartItem.product.stock) {
       this.errorMessage.set(
-        `Acción rechazada: Solo quedan ${cartItem.product.stock} unidades disponibles de "${cartItem.product.name}".`
+        `Acción rechazada: Solo quedan ${cartItem.product.stock} unidades disponibles de "${cartItem.product.name}".`,
       );
       return;
     }
 
-    const cleanPrice = typeof cartItem.product.price === 'number' 
-      ? cartItem.product.price 
-      : Number((cartItem.product.price as string).replace(/[^0-9]/g, '')) || 0;
+    const cleanPrice =
+      typeof cartItem.product.price === 'number'
+        ? cartItem.product.price
+        : Number((cartItem.product.price as string).replace(/[^0-9]/g, '')) || 0;
 
-    this.cart.update(items => items.map(item => 
-      item.product.id === productId 
-        ? { ...item, quantity: newQuantity, subtotal: newQuantity * cleanPrice }
-        : item
-    ));
+    this.cart.update((items) =>
+      items.map((item) =>
+        item.product.id === productId
+          ? { ...item, quantity: newQuantity, subtotal: newQuantity * cleanPrice }
+          : item,
+      ),
+    );
     this.errorMessage.set('');
   }
 
@@ -163,7 +217,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   }
 
   removeFromCart(productId: string): void {
-    this.cart.update(items => items.filter(item => item.product.id !== productId));
+    this.cart.update((items) => items.filter((item) => item.product.id !== productId));
   }
 
   clearCart(): void {
@@ -176,95 +230,78 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   }
 
   async checkout(): Promise<void> {
-  if (this.cart().length === 0) return;
+    if (this.cart().length === 0) return;
 
-  try {
-    const apiPaymentMethod: 'Efectivo' | 'Tarjetas' | 'Transferencia' = 
-      (this.selectedPayment() === 'Debito' || this.selectedPayment() === 'Credito')
-        ? 'Tarjetas'
-        : this.selectedPayment() as 'Efectivo' | 'Transferencia';
+    try {
+      const apiPaymentMethod: 'Efectivo' | 'Tarjetas' | 'Transferencia' =
+        this.selectedPayment() === 'Debito' || this.selectedPayment() === 'Credito'
+          ? 'Tarjetas'
+          : (this.selectedPayment() as 'Efectivo' | 'Transferencia');
 
-    const saleId = `POS-${crypto.randomUUID().substring(0, 5).toUpperCase()}`;
+      const saleId = `POS-${crypto.randomUUID().substring(0, 5).toUpperCase()}`;
 
-    const invoice: SaleInvoice = {
-      id: saleId,
-      items: this.cart(),
-      subtotal: this.cartSubtotal(),
-      tax: this.cartTax(),
-      total: this.cartTotal(),
-      paymentMethod: apiPaymentMethod,
-      createdAt: new Date().toISOString(),
-      operator: this.authService.currentOperatorName(),
-      cashClosureId: undefined
-    };
-
-    // 1. Guardar la boleta principal primero (Petición base indispensable)
-    await this.posRepo.processSale(invoice);
-
-    // 🚀 2. CREAMOS UNA COLA DE PROMESAS EN PARALELO
-    // En lugar de usar 'await' por cada producto, preparamos las peticiones en memoria
-    const promesasDeInventario: Promise<void>[] = [];
-
-    for (const item of this.cart()) {
-      const nextStock = item.product.stock - item.quantity;
-      let nextStatus: 'Óptimo' | 'Bajo' | 'Crítico' = 'Óptimo';
-      const threshold = item.product.minStock * 0.10;
-
-      if (nextStock <= threshold) {
-        nextStatus = 'Crítico';
-      } else if (nextStock < item.product.minStock) {
-        nextStatus = 'Bajo';
-      }
-
-      // Preparamos la actualización del producto (Sin poner await adelante)
-      const pUpdate = this.productRepo.updateProduct({
-        ...item.product,
-        stock: nextStock,
-        status: nextStatus
-      });
-      promesasDeInventario.push(pUpdate as any);
-
-      // Preparamos el movimiento de auditoría en Kardex
-      const automatedMovement: StockMovement = {
-        id: `MOV-${crypto.randomUUID().substring(0, 5).toUpperCase()}`,
-        productName: item.product.name,
-        type: 'Egreso', 
-        quantity: -item.quantity, 
-        reason: `Despacho automático por Venta POS en Boleta de Venta #${saleId}`,
-        date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        operator: invoice.operator
+      const invoice: SaleInvoice = {
+        id: saleId,
+        items: this.cart(),
+        subtotal: this.cartSubtotal(),
+        tax: this.cartTax(),
+        total: this.cartTotal(),
+        paymentMethod: apiPaymentMethod,
+        createdAt: new Date().toISOString(),
+        operator: this.authService.currentOperatorName(),
+        cashClosureId: undefined,
       };
 
-      // Agregamos la petición de Kardex a la cola asíncrona
-      if (typeof (this.stockRepo as any).addMovement === 'function') {
-        promesasDeInventario.push((this.stockRepo as any).addMovement(automatedMovement));
-      } else if (typeof (this.stockRepo as any).addItem === 'function') {
-        promesasDeInventario.push((this.stockRepo as any).addItem(automatedMovement));
+      await this.posRepo.processSale(invoice);
+
+      const promesasDeInventario: Promise<void>[] = [];
+
+      for (const item of this.cart()) {
+        const nextStock = item.product.stock - item.quantity;
+        let nextStatus: 'Óptimo' | 'Bajo' | 'Crítico' = 'Óptimo';
+        const threshold = item.product.minStock * 0.1;
+
+        if (nextStock <= threshold) {
+          nextStatus = 'Crítico';
+        } else if (nextStock < item.product.minStock) {
+          nextStatus = 'Bajo';
+        }
+
+        const pUpdate = this.productRepo.updateProduct({
+          ...item.product,
+          stock: nextStock,
+          status: nextStatus,
+        });
+        promesasDeInventario.push(pUpdate as any);
+
+        const automatedMovement: StockMovement = {
+          id: `MOV-${crypto.randomUUID().substring(0, 5).toUpperCase()}`,
+          productName: item.product.name,
+          type: 'Egreso',
+          quantity: -item.quantity,
+          reason: `Despacho automático por Venta POS en Boleta de Venta #${saleId}`,
+          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          operator: invoice.operator,
+        };
+
+        if (typeof (this.stockRepo as any).addMovement === 'function') {
+          promesasDeInventario.push((this.stockRepo as any).addMovement(automatedMovement));
+        } else if (typeof (this.stockRepo as any).addItem === 'function') {
+          promesasDeInventario.push((this.stockRepo as any).addItem(automatedMovement));
+        }
       }
+
+      await Promise.all(promesasDeInventario);
+
+      this.clearCart();
+      alert(`¡Venta procesada con éxito! Transacción: ${invoice.id}`);
+    } catch (err) {
+      this.errorMessage.set('Error en el servidor central al procesar la venta. Inténtalo de nuevo.');
     }
-
-    // 🚀 3. DISPARO SIMULTÁNEO:
-    // Se envían todas las actualizaciones de stock y Kardex juntas en un solo viaje de internet.
-    // La venta se completará en lo que tarde la petición más lenta (aprox 600ms en total).
-    await Promise.all(promesasDeInventario);
-
-    this.clearCart();
-    alert(`¡Venta procesada con éxito! Transacción: ${invoice.id}`);
-  } catch (err) {
-    this.errorMessage.set('Error en el servidor central al procesar la venta. Inténtalo de nuevo.');
   }
-}
-
 
   formatVisual(value: number | string): string {
-    const numValue = typeof value === 'number' 
-      ? value 
-      : Number(String(value).replace(/[^0-9]/g, '')) || 0;
-
-    return new Intl.NumberFormat('es-CO', { 
-      style: 'currency', 
-      currency: 'COP', 
-      maximumFractionDigits: 0 
-    }).format(numValue);
+    const numValue = typeof value === 'number' ? value : Number(String(value).replace(/[^0-9]/g, '')) || 0;
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(numValue);
   }
 }
