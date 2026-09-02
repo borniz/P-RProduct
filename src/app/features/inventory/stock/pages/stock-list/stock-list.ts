@@ -4,6 +4,7 @@ import { StockMovement } from '../../models/stock.model';
 import { PRODUCT_REPOSITORY } from '../../../../products/data-access/product.repository';
 import { RouterModule } from '@angular/router';
 import { NgClass } from '@angular/common';
+import { AuthService } from '../../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-stock-list',
@@ -12,6 +13,7 @@ import { NgClass } from '@angular/common';
   templateUrl: './stock-list.html'
 })
 export class StockList {
+  private readonly authService = inject(AuthService);
   private readonly stockRepo = inject(STOCK_REPOSITORY);
   private readonly productRepo = inject(PRODUCT_REPOSITORY);
 
@@ -74,7 +76,7 @@ export class StockList {
       quantity: finalQuantity,
       reason: this.reason().trim(),
       date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      operator: 'Yarod Bonilla' // se cambia de acuerdo al usuario
+      operator: this.authService.currentOperatorName() // se cambia de acuerdo al usuario
     };
 
     // 📌 ACTUALIZACIÓN EN CASCADA: Registra el movimiento en el Kardex

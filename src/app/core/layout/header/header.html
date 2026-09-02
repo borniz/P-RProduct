@@ -102,4 +102,25 @@
       </svg>
     </button>
   </div>
+   <div class="h-6 w-px bg-brand-border"></div>
+
+    <!-- 👤 SELECTOR DE SESIÓN DE OPERADOR EN TIEMPO REAL -->
+    <div class="flex items-center gap-2">
+      <!-- Icono de avatar compacto -->
+      <div class="w-8 h-8 rounded-full bg-status-purple/10 border border-status-purple/20 flex items-center justify-center text-status-purple text-xs font-bold font-mono">
+        {{ currentOperatorName().substring(0,2).toUpperCase() }}
+      </div>
+      
+      <div class="flex flex-col text-left hidden sm:block">
+        <!-- Desplegable nativo e interactivo mapeado a los usuarios de Supabase -->
+        <select (change)="onUserSwitch($event)" 
+                [value]="currentUser().id"
+                class="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer pr-1">
+          @for (usr of availableUsers(); track usr.id) {
+            <option [value]="usr.id" class="bg-slate-900 text-slate-200 font-sans font-medium">{{ usr.name }} ({{ usr.description }})</option>
+          }
+        </select>
+        <span class="text-[9px] text-slate-500 font-mono tracking-wider uppercase -mt-0.5">{{ currentOperatorRole() }}</span>
+      </div>
+    </div>
 </header>

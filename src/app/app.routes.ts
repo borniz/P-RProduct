@@ -138,7 +138,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/users',
-        providers: [{ provide: USER_REPOSITORY, useClass: SupabaseUserRepository }],
+        providers: [{ provide: USER_REPOSITORY, useClass: SupabaseUserRepository },],
         loadComponent: () =>
           import('./features/users/pages/user-list/users').then((m) => m.UserListComponent),
       },

@@ -8,6 +8,7 @@ import { STOCK_REPOSITORY } from '../../../inventory/stock/data-access/stock.rep
 import { CartItem, SaleInvoice } from '../../models/pos.models';
 import { Product } from '../../../products/models/product.model';
 import { StockMovement } from '../../../inventory/stock/models/stock.model';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-pos-terminal',
@@ -16,6 +17,7 @@ import { StockMovement } from '../../../inventory/stock/models/stock.model';
   templateUrl: './pos-terminal.html'
 })
 export class PosTerminalComponent implements OnInit, OnDestroy {
+  private readonly authService = inject(AuthService);
   private readonly productRepo = inject(PRODUCT_REPOSITORY);
   private readonly posRepo = inject(POS_REPOSITORY);
   private readonly stockRepo = inject(STOCK_REPOSITORY);
@@ -192,7 +194,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
       total: this.cartTotal(),
       paymentMethod: apiPaymentMethod,
       createdAt: new Date().toISOString(),
-      operator: 'Carlos Mendez',
+      operator: this.authService.currentOperatorName(),
       cashClosureId: undefined
     };
 

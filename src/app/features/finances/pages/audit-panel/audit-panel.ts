@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit, effect } from '@angular/co
 import { CASH_CLOSURE_REPOSITORY, CashClosure } from '../../data-access/cash-closure.repository';
 import { POS_REPOSITORY } from '../../../pos/data-acces/pos.repository';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-audit-panel',
@@ -9,7 +10,8 @@ import { RouterModule } from '@angular/router';
   imports: [RouterModule], // Control flow nativo en plantilla (@if, @for)
   templateUrl: './audit-panel.html',
 })
-export class AuditPanelComponent implements OnInit { // <-- Implementa la interfaz OnInit
+export class AuditPanelComponent implements OnInit { 
+  private readonly authService = inject(AuthService);
   private readonly posRepo = inject(POS_REPOSITORY);
   private readonly closureRepo = inject(CASH_CLOSURE_REPOSITORY);
 
@@ -125,7 +127,7 @@ export class AuditPanelComponent implements OnInit { // <-- Implementa la interf
         realCash: calcs.real,
         diffAmount: calcs.diff,
         status: calcs.status,
-        operator: 'Carlos Méndez',
+        operator: this.authService.currentOperatorName(),
       },
       salesIds,
     );

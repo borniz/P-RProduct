@@ -6,6 +6,8 @@ import { PRODUCT_REPOSITORY } from './features/products/data-access/product.repo
 import { STOCK_REPOSITORY } from './features/inventory/stock/data-access/stock.repository';
 import { SupabaseStockRepository } from './features/inventory/stock/data-access/supabase-stock.repository';
 import { SupabaseProductRepository } from './features/products/data-access/supabase-product.repository';
+import { USER_REPOSITORY } from './features/users/data-access/user.repository';
+import { SupabaseUserRepository } from './features/users/data-access/supabase-user.repository';
 
 
 export const appConfig: ApplicationConfig = {
@@ -13,6 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     { provide: PRODUCT_REPOSITORY, useExisting: SupabaseProductRepository },
-    { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository }
+    { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository },
+    { provide: USER_REPOSITORY,useClass:SupabaseUserRepository}
   ]
 };
