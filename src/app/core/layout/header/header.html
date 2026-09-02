@@ -22,8 +22,8 @@
     </div>
   </div>
 
-  <!-- Controles del Lado Derecho Compactos -->
-  <div class="flex items-center gap-2 sm:gap-4 pl-3">
+  <!-- 📌 CONTENEDOR DE CONTROLES DERECHOS UNIFICADO (Agrupa todos los botones del sistema) -->
+  <div class="flex items-center gap-2 sm:gap-4 pl-3 shrink-0">
     
     <!-- 🔔 CENTRO DE ALERTAS FLOTANTE INTERACTIVO RESPONSIVO SÓLIDO -->
     <div class="relative">
@@ -45,7 +45,6 @@
 
       <!-- Dropdown Flotante Adaptable -->
       @if (isNotificationOpen()) {
-        <!-- 📌 CORRECCIÓN DE OPACIDAD: Cambiado 'bg-brand-surface' por 'bg-slate-900' para blindar el fondo del contenedor contra transparencias -->
         <div class="fixed sm:absolute right-4 sm:right-0 left-4 sm:left-auto mt-2.5 w-[calc(100vw-2rem)] sm:w-96 bg-slate-900 border border-brand-border rounded-2xl p-4 space-y-4 shadow-2xl z-50 animate-fade-in text-left">
           
           <div class="flex items-center justify-between pb-2 border-b border-brand-border">
@@ -54,7 +53,6 @@
           </div>
 
           <!-- Feed Interno de Notificaciones -->
-          <!-- 📌 CORRECCIÓN INTERNA: Cambiado 'bg-brand-bg/60' por 'bg-slate-950' sólido en el contenedor del listado y sub-tarjetas -->
           <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin bg-slate-950 rounded-xl p-1.5">
             @for (notif of appNotifications(); track notif.id) {
               <div class="p-3 bg-slate-900 border rounded-xl flex items-start gap-2.5 transition-colors hover:bg-brand-hover/20"
@@ -62,7 +60,6 @@
                    [class.border-status-warning/20]="notif.type === 'warning'"
                    [class.border-status-info/20]="notif.type === 'info'">
                 
-                <!-- Indicador de Color Lateral Semántico -->
                 <span class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0"
                       [class.bg-status-danger]="notif.type === 'danger'"
                       [class.bg-status-warning]="notif.type === 'warning'"
@@ -71,17 +68,14 @@
 
                 <div class="flex-1 space-y-0.5 text-[11px]">
                   <div class="flex items-center justify-between">
-                    <span class="font-bold text-slate-200"
-                          [class.text-status-danger]="notif.type === 'danger'">{{ notif.title }}</span>
+                    <span class="font-bold text-slate-200" [class.text-status-danger]="notif.type === 'danger'">{{ notif.title }}</span>
                     <span class="text-[9px] text-slate-500 font-mono">{{ notif.timeLabel }}</span>
                   </div>
                   <p class="text-slate-400 leading-relaxed">{{ notif.message }}</p>
                 </div>
               </div>
             } @empty {
-              <div class="py-8 text-center text-slate-500 text-xs">
-                No se registran quiebres de stock ni movimientos en el inventario.
-              </div>
+              <div class="py-8 text-center text-slate-500 text-xs">No se registran quiebres de stock ni movimientos en el inventario.</div>
             }
           </div>
         </div>
@@ -90,7 +84,7 @@
 
     <div class="h-6 w-px bg-brand-border"></div>
 
-    <!-- Selector de Sucursal Inteligente -->
+    <!-- Selector de Sucursal Inteligente Responsivo -->
     <button class="flex items-center gap-1.5 px-2.5 py-2 bg-brand-bg border border-brand-border rounded-xl text-xs sm:text-sm font-medium text-slate-200 hover:border-slate-700 transition-colors cursor-pointer">
       <svg class="w-4 h-4 text-status-info shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72l1.189-1.19A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72M6.75 18h3.5a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75h-3.5a.75.75 0 00-.75.75v3.75c0 .414.336.75.75.75z" />
@@ -101,26 +95,55 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
       </svg>
     </button>
-  </div>
-   <div class="h-6 w-px bg-brand-border"></div>
 
-    <!-- 👤 SELECTOR DE SESIÓN DE OPERADOR EN TIEMPO REAL -->
-    <div class="flex items-center gap-2">
-      <!-- Icono de avatar compacto -->
-      <div class="w-8 h-8 rounded-full bg-status-purple/10 border border-status-purple/20 flex items-center justify-center text-status-purple text-xs font-bold font-mono">
-        {{ currentOperatorName().substring(0,2).toUpperCase() }}
-      </div>
+    <div class="h-6 w-px bg-brand-border"></div>
+
+    <!-- 👤 SELECTOR DE SESIÓN DE OPERADOR EN TIEMPO REAL (RECONECTADO Y ENLAZADO) -->
+     <div class="relative">
       
-      <div class="flex flex-col text-left hidden sm:block">
-        <!-- Desplegable nativo e interactivo mapeado a los usuarios de Supabase -->
-        <select (change)="onUserSwitch($event)" 
-                [value]="currentUser().id"
-                class="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer pr-1">
-          @for (usr of availableUsers(); track usr.id) {
-            <option [value]="usr.id" class="bg-slate-900 text-slate-200 font-sans font-medium">{{ usr.name }} ({{ usr.description }})</option>
-          }
-        </select>
-        <span class="text-[9px] text-slate-500 font-mono tracking-wider uppercase -mt-0.5">{{ currentOperatorRole() }}</span>
-      </div>
+      <!-- Botón Gatillo General: Cambia el usuario al oprimir en cualquier tamaño -->
+      <button (click)="toggleUserMenu()"
+              type="button"
+              class="flex items-center gap-2 text-left cursor-pointer focus:outline-none select-none group">
+        
+        <!-- Icono de avatar con iniciales (Siempre visible) -->
+        <div class="w-8 h-8 rounded-full bg-status-purple/10 border border-status-purple/20 flex items-center justify-center text-status-purple text-xs font-bold font-mono group-hover:border-status-purple/40 transition-colors shrink-0">
+          {{ currentOperatorName().substring(0,2).toUpperCase() }}
+        </div>
+        
+        <!-- Nombre y Rol (Oculto dinámicamente en celulares para evitar desbordes) -->
+        <div class="hidden sm:flex flex-col">
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-bold text-white group-hover:text-status-info transition-colors truncate max-w-[7rem]">{{ currentOperatorName() }}</span>
+            <svg class="w-3 h-3 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </div>
+          <span class="text-[9px] text-slate-500 font-mono tracking-wider uppercase -mt-0.5">{{ currentOperatorRole() }}</span>
+        </div>
+      </button>
+
+      <!-- 📌 DROPDOWN FLOTANTE DE USUARIOS: Blindado contra desbordes en celulares -->
+      @if (isUserMenuOpen()) {
+        <!-- 'fixed sm:absolute right-4 sm:right-0 w-[calc(100vw-2rem)] sm:w-56' 
+             Fuerza a que en celulares quepa perfectamente en la pantalla sin salirse de los márgenes -->
+        <div class="fixed sm:absolute right-4 sm:right-0 left-4 sm:left-auto mt-2.5 w-[calc(100vw-2rem)] sm:w-56 bg-slate-900 border border-brand-border rounded-xl p-2 shadow-2xl z-50 animate-fade-in space-y-1">
+          <div class="px-2.5 py-1.5 border-b border-brand-border/60 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Cambiar de Operador
+          </div>
+          
+          <div class="max-h-48 overflow-y-auto scrollbar-thin space-y-0.5">
+            @for (usr of availableUsers(); track usr.id) {
+              <button (click)="onUserSwitch(usr.id)"
+                      type="button"
+                      [class.bg-status-purple/10]="currentUser().id === usr.id"
+                      [class.text-status-purple]="currentUser().id === usr.id"
+                      class="w-full text-left px-2.5 py-2 text-xs text-slate-300 hover:text-white hover:bg-brand-hover/40 rounded-lg transition-colors flex flex-col cursor-pointer">
+                <span class="font-semibold">{{ usr.name }}</span>
+                <span class="text-[9px] text-slate-500 font-mono uppercase mt-0.5">{{ usr.description || 'Operador' }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
     </div>
+  </div>
 </header>

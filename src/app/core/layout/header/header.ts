@@ -12,7 +12,7 @@ export class Header {
   // Salida nativa para el menú hamburguesa
   private readonly authService = inject(AuthService);
   readonly toggleMenu = output<void>();
-
+  readonly isUserMenuOpen = signal<boolean>(false);
   // Inyección del motor de alertas vivas de Supabase
   private readonly notificationService = inject(NotificationService);
 
@@ -31,11 +31,14 @@ export class Header {
   toggleNotifications(): void {
     this.isNotificationOpen.update((current) => !current);
   }
-  onUserSwitch(e: Event): void {
-  const selectedId = (e.target as HTMLSelectElement).value;
-  const targetUser = this.availableUsers().find(u => u.id === selectedId);
-  if (targetUser) {
-    this.authService.switchUser(targetUser);
+  toggleUserMenu(): void {
+    this.isUserMenuOpen.update((current) => !current);
   }
-}
+  onUserSwitch(userId: string): void {
+    const targetUser = this.availableUsers().find((u) => u.id === userId);
+    if (targetUser) {
+      this.authService.switchUser(targetUser);
+      this.isUserMenuOpen.set(false); // Cierre automático del menú táctil
+    }
+  }
 }
