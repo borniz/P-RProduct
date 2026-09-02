@@ -100,23 +100,31 @@ export class SupabaseProductRepository implements ProductRepository {
   }
 
   // 🔄 UPDATE: Modificación real por ID en Supabase
-  async updateProduct(product: Product): Promise<void> {
-    try {
-      const dtoPayload = this.mapToDto(product);
+async updateProduct(product: Product): Promise<void> {
+  try {
+    const dtoPayload = this.mapToDto(product);
 
-      const { error } = await this.supabase
-        .from('products')
-        .update(dtoPayload)
-        .eq('id', product.id); 
+    // 1. Guarda los cambios reales en Supabase
+    const { error } = await this.supabase
+      .from('products')
+      .update(dtoPayload)
+      .eq('id', product.id); 
 
-      if (error) throw error;
+    if (error) throw error;
 
-      // La actualización en el constructor manejará la sincronización limpia
-    } catch (err) {
-      console.error('Error al actualizar producto en Supabase:', err);
-    }
+    // 2. 🚀 TRUCO DE ALTA VELOCIDAD:
+    // Actualizamos únicamente la celda modificada en el Signal local.
+    // Usamos el operador spread [...current] para clonar el arreglo en memoria,
+    // lo que despierta instantáneamente a la pantalla del Catálogo.
+    this._products.update(current => {
+      const updatedList = current.map(p => p.id === product.id ? product : p);
+      return [...updatedList]; 
+    });
+
+  } catch (err) {
+    console.error('Error al actualizar producto en Supabase:', err);
   }
-
+}
   // 📝 MAPPERS PROFESIONALES DE DESACOPLAMIENTO
   private mapToDomain(dto: ProductDto): Product {
     return {

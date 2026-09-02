@@ -248,7 +248,7 @@ export class ProductCreate implements OnInit {
     input.value = this.formatVisual(rawValue);
   }
 
-  onSubmit(event: Event): void {
+  async onSubmit(event: Event): Promise<void>  {
     event.preventDefault();
     if (!this.name().trim() || !this.unitPrice().trim() || !this.buyPrice().trim()) {
       this.errorMessage.set('Campos obligatorios incompletos.');
@@ -287,14 +287,18 @@ export class ProductCreate implements OnInit {
         : `$ ${this.unitPrice().trim()}`,
       imageurl: this.imagePreview() || undefined,
     };
-
-    if (this.isEditMode()) {
+try {
+  if (this.isEditMode()) {
       this.productService.updateProduct(productPayload);
     } else {
       this.productService.addProduct(productPayload);
     }
 
     this.router.navigate(['/products']);
+} catch (error) {
+  this.errorMessage.set('No se pudieron guardar los cambios en el servidor central.');
+}
+    
   }
 
   cancel(): void {
