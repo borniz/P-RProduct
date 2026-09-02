@@ -1,4 +1,4 @@
-import { Injectable, signal, Signal, inject } from '@angular/core';
+import { Injectable, signal, Signal, inject, NgZone } from '@angular/core'; // 📌 CORREGIDO: Importado NgZone
 import { ProductRepository } from './product.repository';
 import { Product } from '../models/product.model';
 import { ProductDto } from '../models/product.dto';
@@ -8,19 +8,57 @@ import { SupabaseService } from '../../../core/services/supabase.service';
   providedIn: 'root'
 })
 export class SupabaseProductRepository implements ProductRepository {
-  // Inyectamos la conexión global de Supabase
+  // Inyectamos la conexión global de Supabase y el controlador de zonas reactivas
   private readonly supabase = inject(SupabaseService).client;
+  private readonly zone = inject(NgZone); // 📌 Inyectado para asegurar la reactividad
 
-  // Estado reactivo maestro en memoria (Inicia vacío hasta que responda la red)
+  // Estado reactivo maestro en memoria
   private readonly _products = signal<Product[]>([]);
 
   constructor() {
-    // Disparamos la carga inicial de datos de forma automática al instanciar el ERP
+    // 1. Disparamos la carga inicial de datos al instanciar el ERP
     this.loadProductsFromSupabase();
+
+    // 2. 🚀 SUSCRIPCIÓN EN TIEMPO REAL MULTI-EVENTO (INSERT y UPDATE)
+    // Sintoniza cualquier cambio físico en la tabla 'products'
+    setTimeout(() => {
+      this.supabase
+        .channel('cambios-productos-realtime')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'products' }, // Escucha todo tipo de mutación (*)
+          (payload) => {
+            // Obligamos a Angular a capturar la alerta dentro de su ciclo de control nativo
+            this.zone.run(() => {
+              console.log('📡 Cambio detectado en inventario de B&R Solutions:', payload.eventType);
+              
+              // Convertimos el payload crudo de Postgres a nuestra entidad limpia
+              const incomingProduct = this.mapToDomain(payload.new as ProductDto);
+
+              if (payload.eventType === 'INSERT') {
+                this._products.update(current => {
+                  if (current.some(p => p.id === incomingProduct.id)) return current;
+                  return [incomingProduct, ...current];
+                });
+              } 
+              
+              else if (payload.eventType === 'UPDATE') {
+                // Sincroniza stocks alterados por otras cajas rompiendo la referencia de memoria
+                this._products.update(current => 
+                  current.map(p => p.id === incomingProduct.id ? incomingProduct : p)
+                );
+              }
+            });
+          }
+        )
+        .subscribe();
+    }, 0);
   }
- async load(): Promise<void> {
+
+  async load(): Promise<void> {
     await this.loadProductsFromSupabase();
   }
+
   getProducts(): Signal<Product[]> {
     return this._products.asReadonly();
   }
@@ -29,16 +67,16 @@ export class SupabaseProductRepository implements ProductRepository {
   async loadProductsFromSupabase(): Promise<void> {
     try {
       const { data, error } = await this.supabase
-        .from('products') // Nombre exacto de tu tabla en Supabase
+        .from('products') 
         .select('*')
         .order('id', { ascending: false });
 
       if (error) throw error;
 
       if (data) {
-        // Mapeamos los DTOs de Postgres a las entidades del Dominio y actualizamos el Signal
         const mappedProducts = (data as ProductDto[]).map(dto => this.mapToDomain(dto));
-        this._products.set(mappedProducts);
+        // 🚀 CLONACIÓN EN MEMORIA: Asegura que el POS y Catálogo destruyan la caché vieja
+        this._products.set([...mappedProducts]);
       }
     } catch (err) {
       console.error('Error crítico al leer inventario desde Supabase:', err);
@@ -48,7 +86,6 @@ export class SupabaseProductRepository implements ProductRepository {
   // 📤 CREATE: Inserción real en Supabase
   async addProduct(product: Product): Promise<void> {
     try {
-      // Convertimos el modelo de la UI al formato DTO (snake_case) que exige Postgres
       const dtoPayload = this.mapToDto(product);
 
       const { error } = await this.supabase
@@ -56,9 +93,8 @@ export class SupabaseProductRepository implements ProductRepository {
         .insert([dtoPayload]);
 
       if (error) throw error;
-
-      // Optimistic UI Update: Refrescamos la lista local de inmediato para máxima velocidad visual
-      this._products.update(current => [product, ...current]);
+      
+      // La actualización en el constructor manejará la sincronización limpia
     } catch (err) {
       console.error('Error al insertar producto en Supabase:', err);
     }
@@ -72,14 +108,11 @@ export class SupabaseProductRepository implements ProductRepository {
       const { error } = await this.supabase
         .from('products')
         .update(dtoPayload)
-        .eq('id', product.id); // Cláusula WHERE de SQL estricta
+        .eq('id', product.id); 
 
       if (error) throw error;
 
-      // Actualizamos la fila en el Signal local en milisegundos
-      this._products.update(current => 
-        current.map(p => p.id === product.id ? product : p)
-      );
+      // La actualización en el constructor manejará la sincronización limpia
     } catch (err) {
       console.error('Error al actualizar producto en Supabase:', err);
     }
