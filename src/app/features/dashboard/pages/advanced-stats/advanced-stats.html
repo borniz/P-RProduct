@@ -1,27 +1,59 @@
 <div class="space-y-7">
   <!-- Encabezado del Módulo de Inteligencia -->
-  <div>
-    <h1 class="text-2xl font-bold text-white tracking-tight">Estadísticas e Inteligencia Comercial</h1>
-    <p class="text-sm text-slate-400 mt-0.5">Análisis avanzado de comportamiento financiero, auditoría de mermas y ticketera del ERP</p>
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-white tracking-tight">Estadísticas e Inteligencia Comercial</h1>
+      <p class="text-sm text-slate-400 mt-0.5">Análisis avanzado de comportamiento financiero, auditoría de mermas y ticketera del ERP</p>
+    </div>
+
+    <!-- 📅 FILTRO POR RANGO DE FECHAS RESPONSIVO -->
+    <div class="flex flex-wrap items-center gap-2 bg-brand-surface border border-brand-border p-2 rounded-2xl shadow-xs self-start md:self-center">
+      <!-- Filtros Rápidos Semánticos -->
+      <div class="flex items-center gap-1">
+        @for (opt of [{ id: 'hoy', lbl: 'Hoy' }, { id: '7d', lbl: '7 Días' }, { id: '30d', lbl: '30 Días' }, { id: 'custom', lbl: 'Personalizado' }]; track opt.id) {
+          <button (click)="onFilterTypeChange(opt.id)"
+                  type="button"
+                  [class]="dateFilterType() === opt.id ? 'bg-status-info/15 border-status-info/40 text-white font-semibold' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200'"
+                  class="px-3 py-1.5 text-xs rounded-xl border transition-all cursor-pointer whitespace-nowrap">
+            {{ opt.lbl }}
+          </button>
+        }
+      </div>
+
+      <!-- Cajas de Calendario: Solo se dibujan en cascada si se presiona 'Personalizado' -->
+      @if (dateFilterType() === 'custom') {
+        <div class="flex items-center gap-2 pl-2 border-l border-brand-border/60 animate-fade-in flex-1 min-w-[240px] sm:min-w-0">
+          <input (input)="onCustomDateInput($event, 'start')"
+                 [value]="customStartDate()"
+                 type="date"
+                 class="bg-brand-bg border border-brand-border text-slate-300 px-2.5 py-1 text-xs rounded-xl focus:outline-none focus:border-status-info cursor-pointer font-mono" />
+          <span class="text-slate-600 text-xs font-mono">al</span>
+          <input (input)="onCustomDateInput($event, 'end')"
+                 [value]="customEndDate()"
+                 type="date"
+                 class="bg-brand-bg border border-brand-border text-slate-300 px-2.5 py-1 text-xs rounded-xl focus:outline-none focus:border-status-info cursor-pointer font-mono" />
+        </div>
+      }
+    </div>
   </div>
 
-  <!-- TARJETAS DE INDICADORES AVANZADOS (KPIs COMPUTED) -->
+  <!-- TARJETAS DE INDICADORES AVANZADOS (KPIs COMPUTED AUTOMATIZADOS) -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
     
-    <!-- KPI 1: Ticket Promedio por Boleta -->
+    <!-- KPI 1: Ticket Promedio por Boleta según Rango -->
     <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group">
-      <div class="p-3 rounded-xl bg-status-purple/10 text-status-purple border border-status-purple/10">
+      <div class="p-3 rounded-xl bg-status-purple/10 text-status-purple border border-status-purple/10 group-hover:scale-105 transition-transform">
         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21a.75.75 0 01-1.5 0V4.757L4.305 17.05a.75.75 0 11-1.06-1.06L15.493 3.75H9.25a.75.75 0 010-1.5h10a.75.75 0 01.75.75z" /></svg>
       </div>
       <div>
-        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Ticket Presupuesto Venta</span>
+        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Ticket Promedio Venta</span>
         <span class="block text-xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-purple transition-colors">{{ formatCurrency(ticketPromedio()) }}</span>
       </div>
     </div>
 
-    <!-- KPI 2: Pérdida Acumulada por Mermas -->
+    <!-- KPI 2: Pérdida Monetaria por Mermas del Periodo Seleccionado -->
     <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group">
-      <div class="p-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/10">
+      <div class="p-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/10 group-hover:scale-105 transition-transform">
         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" /></svg>
       </div>
       <div>
@@ -30,9 +62,9 @@
       </div>
     </div>
 
-    <!-- KPI 3: Porcentaje de Eficiencia -->
+    <!-- KPI 3: Porcentaje de Eficiencia de Operaciones del Periodo -->
     <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group sm:col-span-2 lg:col-span-1">
-      <div class="p-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/10">
+      <div class="p-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/10 group-hover:scale-105 transition-transform">
         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       </div>
       <div>
@@ -50,11 +82,11 @@
       <p class="text-xs text-slate-500 mt-0.5">Gráfico estadístico comparativo de recaudación por red POS en los últimos 5 meses</p>
     </div>
 
-    <!-- Contenedor del Gráfico Dinámico -->
+    <!-- Contenedor del Gráfico Dinámico Puro Tailwind -->
     <div class="w-full bg-brand-bg/40 border border-brand-border/50 rounded-xl p-6 flex flex-col justify-between h-72">
       <!-- Barras Estadísticas Proporcionales de Crecimiento -->
-      <div class="flex-1 flex items-end justify-between gap-4 px-2 sm:px-6">
-        @for (val of monthlyRevenueData().datasets[0].data; track $index) {
+      <div class="flex-1 flex items-end justify-between gap-4 px-2 sm:px-6 h-full">
+        @for (val of monthlyRevenueData().datasets.data; track $index) {
           <div class="flex-1 flex flex-col items-center gap-2 group relative h-full justify-end">
             
             <!-- Globo flotante con el monto al pasar el cursor (Hover) -->
@@ -62,8 +94,7 @@
               {{ formatCurrency(val) }}
             </span>
 
-            <!-- 📌 ALTURA ESCALADA: Divide el monto del mes actual por el techo histórico maxMonthValue() 
-                 para calcular la proporción porcentual exacta y pintar el gráfico de forma real -->
+            <!-- Barra Proporcional Escalada Dinámicamente -->
             <div class="w-full bg-status-info/20 border-t border-status-info/40 rounded-t-lg group-hover:bg-status-info/40 transition-all duration-500 shadow-xs"
                  [style.height.%]="val > 0 ? (val / maxMonthValue()) * 100 : 4">
             </div>
