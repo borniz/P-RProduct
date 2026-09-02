@@ -2,153 +2,531 @@
   <!-- Encabezado de Bienvenida -->
   <div>
     <h1 class="text-2xl font-bold text-white tracking-tight">Panel de Control</h1>
-    <p class="text-sm text-slate-400 mt-0.5">Métricas de rendimiento e indicadores en tiempo real de B&R Solutions</p>
+    <p class="text-sm text-slate-400 mt-0.5">
+      Métricas de rendimiento e indicadores en tiempo real de B&R Solutions
+    </p>
   </div>
 
   <!-- INDICADORES CLAVE (KPIs OPERATIVOS) -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-    
     <!-- KPI 1: Total Catálogo -->
-    <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group">
+    <div
+      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group"
+    >
       <div class="p-3 rounded-xl bg-status-info/10 text-status-info border border-status-info/10">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+          />
+        </svg>
       </div>
       <div>
-        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Productos en Catálogo</span>
-        <span class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-info transition-colors">{{ totalProductsCount() }}</span>
+        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider"
+          >Productos en Catálogo</span
+        >
+        <span
+          class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-info transition-colors"
+          >{{ totalProductsCount() }}</span
+        >
       </div>
     </div>
 
     <!-- KPI 2: Capital Invertido -->
-    <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group">
-      <div class="p-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/10">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.659 3.07.659 4.242 0 1.172-.659 1.172-1.728 0-2.387-.448-.252-1.072-.472-1.734-.613m-3.006 0c-.662-.141-1.286-.361-1.734-.613-1.172-.659-1.172-1.728 0-2.387 1.171-.659 3.07-.659 4.242 0l.878.659M4.5 6h15" /></svg>
+    <div
+      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group"
+    >
+      <div
+        class="p-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/10"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 6v12m-3-2.818l.879.659c1.171.659 3.07.659 4.242 0 1.172-.659 1.172-1.728 0-2.387-.448-.252-1.072-.472-1.734-.613m-3.006 0c-.662-.141-1.286-.361-1.734-.613-1.172-.659-1.172-1.728 0-2.387 1.171-.659 3.07-.659 4.242 0l.878.659M4.5 6h15"
+          />
+        </svg>
       </div>
       <div>
-        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Valorización de Almacén</span>
-        <span class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-success transition-colors">{{ formatCurrency(totalInventoryValue()) }}</span>
+        <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider"
+          >Valorización de Almacén</span
+        >
+        <span
+          class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-success transition-colors"
+          >{{ formatCurrency(totalInventoryValue()) }}</span
+        >
       </div>
     </div>
 
-    <!-- 🔔 KPI 3: Alertas de Quiebre de Stock (CLIQUEABLE PARA ABRIR MODAL DETALLADO) -->
-    <div (click)="openAlertsModal()" 
-         [class.cursor-pointer]="criticalStockCount() > 0"
-         class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group sm:col-span-2 lg:col-span-1 hover:border-status-danger/40 transition-all select-none">
-      <div class="p-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/10 group-hover:scale-105 transition-transform">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+    <!-- KPI 3: Alertas de Quiebre de Stock -->
+    <div
+      (click)="openAlertsModal()"
+      [class.cursor-pointer]="criticalStockCount() > 0"
+      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex items-center gap-4 shadow-sm group sm:col-span-2 lg:col-span-1 hover:border-status-danger/40 transition-all select-none"
+    >
+      <div
+        class="p-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/10 group-hover:scale-105 transition-transform"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+          />
+        </svg>
       </div>
       <div class="flex-1">
         <div class="flex items-center justify-between">
-          <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Productos en Alerta</span>
+          <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider"
+            >Productos en Alerta</span
+          >
           @if (criticalStockCount() > 0) {
-            <span class="text-[9px] text-status-danger font-medium bg-status-danger/5 px-2 py-0.5 border border-status-danger/10 rounded-md group-hover:bg-status-danger/10 transition-colors">Ver todos ➔</span>
+            <span
+              class="text-[9px] text-status-danger font-medium bg-status-danger/5 px-2 py-0.5 border border-status-danger/10 rounded-md group-hover:bg-status-danger/10 transition-colors"
+              >Ver todos ➔</span
+            >
           }
         </div>
-        <span class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-danger transition-colors">{{ criticalStockCount() }}</span>
+        <span
+          class="block text-2xl font-bold text-white font-mono mt-0.5 tracking-tight group-hover:text-status-danger transition-colors"
+          >{{ criticalStockCount() }}</span
+        >
       </div>
     </div>
   </div>
 
-  <!-- 📈 NUEVA SECCIÓN DE ANALÍTICA COMERCIAL FINANCIERA (Ventas Semanales y Mensuales) -->
+  <!-- ANALÍTICA CRONOLÓGICA DE VENTAS CON ACCIONES DE MODAL TÁCTIL -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-    
-    <!-- Bloque Ventas Semanales -->
-    <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex flex-col justify-between shadow-xs">
+    <!-- Tarjeta Ventas Semanales (Abrible) -->
+    <div
+      (click)="openLast7DaysModal()"
+      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex flex-col justify-between shadow-xs cursor-pointer hover:border-status-info/40 transition-all group select-none"
+    >
       <div class="flex items-center justify-between">
-        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ventas de los Últimos 7 Días</span>
+        <span
+          class="text-xs font-semibold text-slate-400 uppercase tracking-wider group-hover:text-status-info transition-colors"
+          >Ventas Últimos 7 Días (Inspeccionar) ➔</span
+        >
         <span class="w-2 h-2 rounded-full bg-status-info animate-pulse"></span>
       </div>
       <div class="mt-4">
-        <span class="text-3xl font-black text-white font-mono tracking-tight">{{ formatCurrency(weeklySalesTotal()) }}</span>
-        <p class="text-xs text-slate-500 mt-1">Cubicación total acumulada por terminales POS activas</p>
+        <span class="text-3xl font-black text-white font-mono tracking-tight">{{
+          formatCurrency(weeklySalesTotal())
+        }}</span>
+        <p class="text-xs text-slate-500 mt-1">
+          Cubicación total acumulada por terminales POS activas
+        </p>
       </div>
     </div>
 
-    <!-- Bloque Ventas Mensuales con Comparativa SQL -->
-    <div class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex flex-col justify-between shadow-xs">
+    <!-- Tarjeta Ventas Mensuales (Abrible) -->
+    <div
+      (click)="openMonthModal()"
+      class="bg-brand-surface border border-brand-border/60 p-5 rounded-2xl flex flex-col justify-between shadow-xs cursor-pointer hover:border-status-success/40 transition-all group select-none"
+    >
       <div class="flex items-center justify-between">
-        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ventas del Mes en Curso</span>
-        
-        <!-- Indicador de Tendencia Dinámico Comparativo -->
-        <div class="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-lg border bg-brand-bg"
-             [class.text-status-success]="monthComparison().isUp" [class.border-status-success/20]="monthComparison().isUp"
-             [class.text-status-danger]="!monthComparison().isUp" [class.border-status-danger/20]="!monthComparison().isUp">
+        <span
+          class="text-xs font-semibold text-slate-400 uppercase tracking-wider group-hover:text-status-success transition-colors"
+          >Ventas del Mes en Curso (Inspeccionar) ➔</span
+        >
+        <div
+          class="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-lg border bg-brand-bg"
+          [class.text-status-success]="monthComparison().isUp"
+          [class.border-status-success/20]="monthComparison().isUp"
+          [class.text-status-danger]="!monthComparison().isUp"
+          [class.border-status-danger/20]="!monthComparison().isUp"
+        >
           <span>{{ monthComparison().isUp ? '▲' : '▼' }} {{ monthComparison().percentage }}%</span>
         </div>
       </div>
       <div class="mt-4">
-        <span class="text-3xl font-black text-white font-mono tracking-tight">{{ formatCurrency(currentMonthSalesTotal()) }}</span>
+        <span class="text-3xl font-black text-white font-mono tracking-tight">{{
+          formatCurrency(currentMonthSalesTotal())
+        }}</span>
         <p class="text-xs text-slate-500 mt-1">
-          Flujo de caja comercial <span class="font-medium text-slate-300">{{ monthComparison().label }}</span>.
+          Flujo de caja comercial
+          <span class="font-medium text-slate-300">{{ monthComparison().label }}</span
+          >.
         </p>
       </div>
     </div>
   </div>
-  <!-- SECCIÓN INFERIOR: MONITOREO DE ALARMAS Y KARDEX (Mantén tus tablas originales) -->
+
+  <!-- SECCIÓN DE RANKINGS: MÁS VENDIDOS Y MENOS VENDIDOS -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Top Más Vendidos -->
+    <div class="p-5 bg-brand-surface border border-brand-border rounded-2xl shadow-sm space-y-4">
+      <div>
+        <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+          <span class="text-status-success">▲</span> Productos Más Solicitados
+        </h2>
+        <p class="text-xs text-slate-400 mt-0.5">
+          Artículos con mayor rotación física en mostrador
+        </p>
+      </div>
+      <div class="space-y-2">
+        @for (prod of top3MostSold(); track prod.name; let i = $index) {
+          <div
+            class="p-3 bg-brand-bg/50 border border-brand-border/40 rounded-xl flex items-center justify-between text-xs group hover:border-status-success/30 transition-all"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="font-mono font-bold text-status-success text-sm w-4">#{{ i + 1 }}</span>
+              <div class="min-w-0">
+                <span class="block font-semibold text-slate-200 truncate group-hover:text-white">{{
+                  prod.name
+                }}</span>
+                <span class="block text-[10px] text-slate-500 mt-0.5 font-sans">{{
+                  prod.category
+                }}</span>
+              </div>
+            </div>
+            <div class="text-right shrink-0 font-mono">
+              <span class="block font-bold text-white text-xs">{{ prod.quantity }} uds</span>
+              <span class="block text-[10px] text-slate-500 mt-0.5">{{
+                formatCurrency(prod.totalRevenue)
+              }}</span>
+            </div>
+          </div>
+        } @empty {
+          <div
+            class="p-4 text-center text-slate-500 text-xs bg-brand-bg/30 border border-brand-border rounded-xl"
+          >
+            Sin registros de facturación aún.
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Top Menos Vendidos -->
+    <div class="p-5 bg-brand-surface border border-brand-border rounded-2xl shadow-sm space-y-4">
+      <div>
+        <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+          <span class="text-status-danger">▼</span> Stock Crítico / Baja Rotación
+        </h2>
+        <p class="text-xs text-slate-400 mt-0.5">
+          Artículos estancados en góndola (Requieren auditoría)
+        </p>
+      </div>
+      <div class="space-y-2">
+        @for (prod of top3LeastSold(); track prod.name; let i = $index) {
+          <div
+            class="p-3 bg-brand-bg/50 border border-brand-border/40 rounded-xl flex items-center justify-between text-xs group hover:border-status-danger/30 transition-all"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="font-mono font-bold text-status-danger text-sm w-4">#{{ i + 1 }}</span>
+              <div class="min-w-0">
+                <span class="block font-semibold text-slate-200 truncate group-hover:text-white">{{
+                  prod.name
+                }}</span>
+                <span class="block text-[10px] text-slate-500 mt-0.5">{{ prod.category }}</span>
+              </div>
+            </div>
+            <div class="text-right shrink-0 font-mono">
+              <span class="block font-bold text-slate-300 text-xs">{{ prod.quantity }} uds</span>
+              <span class="block text-[10px] text-slate-500 mt-0.5">{{
+                formatCurrency(prod.totalRevenue)
+              }}</span>
+            </div>
+          </div>
+        } @empty {
+          <div
+            class="p-4 text-center text-slate-500 text-xs bg-brand-bg/30 border border-brand-border rounded-xl"
+          >
+            Sin productos de baja rotación detectados.
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+  <!-- SECCIÓN INFERIOR: MONITOREO DE ALARMAS Y KARDEX CONECTOR -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2 bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4">
-      <div><h2 class="text-base font-semibold text-white tracking-tight">Alertas de Reabastecimiento Crítico</h2><p class="text-xs text-slate-500 mt-0.5">Artículos en desabastecimiento crítico</p></div>
+    <div
+      class="lg:col-span-2 bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4"
+    >
+      <div>
+        <h2 class="text-base font-semibold text-white tracking-tight">
+          Alertas de Reabastecimiento Crítico
+        </h2>
+        <p class="text-xs text-slate-500 mt-0.5">Artículos en desabastecimiento crítico</p>
+      </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-sm">
-          <thead><tr class="border-b border-brand-border text-[10px] font-bold text-slate-500 uppercase tracking-wider"><th class="pb-2 font-semibold">Producto</th><th class="pb-2 font-semibold">Categoría</th><th class="pb-2 font-semibold text-center w-24">Stock Actual</th><th class="pb-2 font-semibold text-center w-24">Mínimo</th></tr></thead>
+          <thead>
+            <tr
+              class="border-b border-brand-border text-[10px] font-bold text-slate-500 uppercase tracking-wider"
+            >
+              <th class="pb-2 font-semibold">Producto</th>
+              <th class="pb-2 font-semibold">Categoría</th>
+              <th class="pb-2 font-semibold text-center w-24">Stock Actual</th>
+              <th class="pb-2 font-semibold text-center w-24">Mínimo</th>
+            </tr>
+          </thead>
           <tbody class="divide-y divide-brand-border/20 text-slate-300">
             @for (alert of tableAlertsList(); track alert.id) {
-              <tr class="hover:bg-brand-hover/10 transition-colors duration-75"><td class="py-3 font-medium text-white truncate max-w-[160px]">{{ alert.name }}</td><td class="py-3 text-xs text-slate-400">{{ alert.category }}</td><td class="py-3 text-center font-bold font-mono text-xs text-status-danger">{{ alert.stock }} uds</td><td class="py-3 text-center font-mono text-xs text-slate-500">{{ alert.minStock }} uds</td></tr>
+              <tr class="hover:bg-brand-hover/10 transition-colors duration-75">
+                <td class="py-3 font-medium text-white truncate max-w-[160px]">{{ alert.name }}</td>
+                <td class="py-3 text-xs text-slate-400">{{ alert.category }}</td>
+                <td class="py-3 text-center font-bold font-mono text-xs text-status-danger">
+                  {{ alert.stock }} uds
+                </td>
+                <td class="py-3 text-center font-mono text-xs text-slate-500">
+                  {{ alert.minStock }} uds
+                </td>
+              </tr>
             }
           </tbody>
         </table>
       </div>
     </div>
+
+    <!-- Bitácora del Kardex Completada -->
     <div class="bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4">
-      <div><h2 class="text-base font-semibold text-white tracking-tight">Últimos Movimientos de Bodega</h2><p class="text-xs text-slate-500 mt-0.5">Bitácora de auditoría en tiempo real</p></div>
-      <div class="flow-root"><ul class="-mb-8">
-        @for (mov of recentActivity(); track mov.id; let last = $last) {
-          <li><div class="relative pb-6">@if (!last) { <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-brand-border"></span> }<div class="relative flex space-x-3"><div><span [class.bg-status-success]="mov.type === 'Ingreso'" [class.bg-status-danger]="mov.type === 'Egreso'" [class.bg-status-warning]="mov.type === 'Ajuste'" class="h-8 w-8 rounded-xl flex items-center justify-center ring-4 ring-brand-surface border border-white/5 shadow-inner"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg></span></div><div class="flex-1 min-w-0 pt-0.5"><p class="text-xs font-semibold text-slate-200 truncate">{{ mov.productName }}</p><p class="text-[11px] text-slate-400 mt-0.5 truncate"><span class="font-medium text-slate-300">{{ mov.type }}:</span> {{ mov.reason }}</p><div class="flex items-center justify-between text-[10px] text-slate-500 font-mono mt-1"><span>{{ mov.date }}</span><span class="font-medium text-slate-400">{{ mov.operator }}</span></div></div></div></div></li>
-        }
-      </ul></div>
-    </div>
-  </div>
-</div>
-
-<!-- 📌 NUEVO MODAL COMPLETO REACTIVO DE PRODUCTOS EN ALERTA -->
-@if (isAlertModalOpen()) {
-  <div class="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
-    <div class="bg-brand-surface border border-brand-border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-      
-      <!-- Encabezado del Modal -->
-      <div class="px-6 py-4 border-b border-brand-border flex items-center justify-between bg-brand-bg/40">
-        <div>
-          <h2 class="text-base font-bold text-white tracking-tight">Reporte Crítico de Inventario</h2>
-          <p class="text-xs text-status-danger font-medium mt-0.5">Se registran {{ criticalStockCount() }} SKU en estado de riesgo operativo</p>
-        </div>
-        <button (click)="closeAlertsModal()" type="button" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-brand-hover transition-colors cursor-pointer">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
+      <div>
+        <h2 class="text-base font-semibold text-white tracking-tight">
+          Últimos Movimientos de Bodega
+        </h2>
+        <p class="text-xs text-slate-500 mt-0.5">Bitácora de auditoría en tiempo real</p>
       </div>
-
-      <!-- Cuerpo del Modal con Scroll Seguro -->
-      <div class="p-6 overflow-y-auto flex-1 space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          @for (prod of allCriticalProducts(); track prod.id) {
-            <div class="p-3 bg-brand-bg border border-brand-border rounded-xl flex items-center justify-between gap-3 text-xs">
-              <div class="min-w-0">
-                <span class="block font-bold text-slate-200 truncate">{{ prod.name }}</span>
-                <span class="block text-[10px] text-slate-500 font-mono mt-0.5">SKU: {{ prod.sku }} | Min: {{ prod.minStock }}</span>
+      <div class="flow-root">
+        <ul class="-mb-8">
+          @for (mov of recentActivity(); track mov.id; let last = $last) {
+            <li>
+              <div class="relative pb-6">
+                @if (!last) {
+                  <span
+                    class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-brand-border/60"
+                    aria-hidden="true"
+                  ></span>
+                }
+                <div class="relative flex space-x-3 text-xs">
+                  <div>
+                    <span
+                      [class.bg-status-success/20]="mov.type === 'Ingreso'"
+                      [class.text-status-success]="mov.type === 'Ingreso'"
+                      [class.bg-status-danger/20]="mov.type === 'Egreso'"
+                      [class.text-status-danger]="mov.type === 'Egreso'"
+                      class="h-8 w-8 rounded-xl flex items-center justify-center border border-white/5 font-mono font-bold"
+                    >
+                      {{ mov.type === 'Ingreso' ? '+' : '-' }}
+                    </span>
+                  </div>
+                  <div class="flex-1 min-w-0 pt-1.5">
+                    <p class="text-slate-300 font-medium truncate max-w-[170px]">
+                      {{ mov.productName }}
+                    </p>
+                    <span class="block text-[10px] text-slate-500 mt-0.5 truncate max-w-[180px]">{{
+                      mov.reason
+                    }}</span>
+                  </div>
+                  <div class="text-right pt-1.5 font-mono text-[10px] text-slate-500 shrink-0">
+                    <span>{{ mov.date }}</span>
+                  </div>
+                </div>
               </div>
-              <span [class.bg-status-danger/10]="prod.status === 'Crítico'" [class.text-status-danger]="prod.status === 'Crítico'"
-                    [class.bg-status-warning/10]="prod.status === 'Bajo'" [class.text-status-warning]="prod.status === 'Bajo'"
-                    class="px-2 py-1 border border-white/5 rounded-lg font-mono font-black text-center shrink-0">
-                {{ prod.stock }} uds
-              </span>
-            </div>
+            </li>
           }
-        </div>
-      </div>
-
-      <!-- Barra de Acciones del Modal -->
-      <div class="p-4 bg-brand-bg/40 border-t border-brand-border flex items-center justify-end">
-        <button (click)="closeAlertsModal()" type="button" class="px-4 py-2 bg-brand-hover text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition-all cursor-pointer">Cerrar Reporte</button>
+        </ul>
       </div>
     </div>
   </div>
-}
+
+  <!-- ============================================== -->
+  <!-- 📌 MODAL FLOTANTE: ALERTAS COMPLETAS DE STOCK  -->
+  <!-- ============================================== -->
+  @if (isAlertModalOpen()) {
+    <div
+      class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in"
+    >
+      <div
+        class="bg-brand-surface border border-brand-border rounded-2xl w-full max-w-2xl p-5 shadow-xl flex flex-col max-h-[75vh]"
+      >
+        <div class="flex items-center justify-between pb-2 border-b border-brand-border">
+          <div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">
+              Productos Bajo Umbral de Seguridad
+            </h3>
+          </div>
+          <button
+            (click)="closeAlertsModal()"
+            class="text-slate-400 hover:text-white p-1 font-bold text-xs cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="overflow-y-auto flex-1 mt-3 pr-1 scrollbar-thin">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr
+                class="border-b border-brand-border text-slate-500 font-bold uppercase tracking-wider pb-2"
+              >
+                <th class="pb-1">Producto</th>
+                <th class="pb-1 text-center">Stock</th>
+                <th class="pb-1 text-center">Mínimo</th>
+                <th class="pb-1 text-center">Estado</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-brand-border/30 text-slate-300 font-mono">
+              @for (item of allCriticalProducts(); track item.id) {
+                <tr class="hover:bg-brand-bg/20">
+                  <td class="py-2 font-sans font-medium text-white truncate max-w-[200px]">
+                    {{ item.name }}
+                  </td>
+                  <td class="py-2 text-center text-status-danger font-bold">
+                    {{ item.stock }} uds
+                  </td>
+                  <td class="py-2 text-center text-slate-500">{{ item.minStock }} uds</td>
+                  <td class="py-2 text-center">
+                    <span
+                      [class.text-status-danger]="item.status === 'Crítico'"
+                      [class.text-status-warning]="item.status === 'Bajo'"
+                      class="font-bold font-sans"
+                    >
+                      {{ item.status }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+  <!-- ============================================== -->
+  <!-- 📌 MODAL FLOTANTE: DETALLE HISTÓRICO 7 DÍAS    -->
+  <!-- ============================================== -->
+  @if (isLast7DaysModalOpen()) {
+    <div
+      class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in"
+    >
+      <div
+        class="bg-brand-surface border border-brand-border rounded-2xl w-full max-w-4xl p-6 shadow-xl flex flex-col max-h-[80vh]"
+      >
+        <div class="flex items-center justify-between pb-3 border-b border-brand-border">
+          <div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">
+              Auditoría Fiscal: Últimos 7 Días
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              Historial completo de transacciones del periodo
+            </p>
+          </div>
+          <button
+            (click)="isLast7DaysModalOpen.set(false)"
+            class="text-slate-400 hover:text-white p-1 font-bold text-xs cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="overflow-y-auto flex-1 mt-4 pr-1 scrollbar-thin">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr
+                class="border-b border-brand-border text-slate-500 font-bold uppercase tracking-wider pb-2"
+              >
+                <th class="pb-2">Folio ID</th>
+                <th class="pb-2">Fecha / Hora</th>
+                <th class="pb-2">Operador</th>
+                <th class="pb-2">Medio Pago</th>
+                <th class="pb-2 text-right">Total Facturado</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-brand-border/30 text-slate-300 font-mono">
+              @for (sale of last7DaysSalesList(); track sale.id) {
+                <tr class="hover:bg-brand-bg/30">
+                  <td class="py-2.5 font-bold text-slate-200">{{ sale.id }}</td>
+                  <td class="py-2.5 text-slate-400">
+                    {{ sale.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                  </td>
+                  <td class="py-2.5 font-sans">{{ sale.operator }}</td>
+                  <td class="py-2.5 font-sans">
+                    <span
+                      [class.text-status-success]="sale.paymentMethod === 'Efectivo'"
+                      [class.text-status-info]="sale.paymentMethod === 'Tarjetas'"
+                      class="font-semibold"
+                    >
+                      {{ sale.paymentMethod }}
+                    </span>
+                  </td>
+                  <td class="py-2.5 text-right font-bold text-white">
+                    {{ formatCurrency(sale.total) }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ============================================== -->
+  <!-- 📌 MODAL FLOTANTE: HISTORIAL COMERCIAL DEL MES -->
+  <!-- ============================================== -->
+  @if (isMonthModalOpen()) {
+    <div
+      class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in"
+    >
+      <div
+        class="bg-brand-surface border border-brand-border rounded-2xl w-full max-w-4xl p-6 shadow-xl flex flex-col max-h-[80vh]"
+      >
+        <div class="flex items-center justify-between pb-3 border-b border-brand-border">
+          <div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">
+              Consolidación Comercial del Mes
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              Libro diario totalizado del periodo en curso
+            </p>
+          </div>
+          <button
+            (click)="isMonthModalOpen.set(false)"
+            class="text-slate-400 hover:text-white p-1 font-bold text-xs cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="overflow-y-auto flex-1 mt-4 pr-1 scrollbar-thin">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr
+                class="border-b border-brand-border text-slate-500 font-bold uppercase tracking-wider pb-2"
+              >
+                <th class="pb-2">Folio ID</th>
+                <th class="pb-2">Fecha / Hora</th>
+                <th class="pb-2">Operador</th>
+                <th class="pb-2">Medio Pago</th>
+                <th class="pb-2 text-right">Total Facturado</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-brand-border/30 text-slate-300 font-mono">
+              @for (sale of currentMonthSalesList(); track sale.id) {
+                <tr class="hover:bg-brand-bg/30">
+                  <td class="py-2.5 font-bold text-slate-200">{{ sale.id }}</td>
+                  <td class="py-2.5 text-slate-400">
+                    {{ sale.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                  </td>
+                  <td class="py-2.5 font-sans">{{ sale.operator }}</td>
+                  <td class="py-2.5 font-sans">
+                    <span
+                      [class.text-status-success]="sale.paymentMethod === 'Efectivo'"
+                      [class.text-status-info]="sale.paymentMethod === 'Tarjetas'"
+                      class="font-semibold"
+                    >
+                      {{ sale.paymentMethod }}
+                    </span>
+                  </td>
+                  <td class="py-2.5 text-right font-bold text-white">
+                    {{ formatCurrency(sale.total) }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+<!-- Cierre Definitivo del Contenedor Maestro -->

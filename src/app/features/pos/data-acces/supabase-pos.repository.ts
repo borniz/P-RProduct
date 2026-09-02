@@ -99,6 +99,7 @@ export class SupabasePosRepository implements PosRepository {
       createdAt: dto.created_at || dto.createdAt,
       operator: dto.operator,
       cashClosureId: dto.cash_closure_id || dto.cashClosureId,
+      itemsSnapshot: dto.items_snapshot || dto.itemsSnapshot || null
     };
   }
 }

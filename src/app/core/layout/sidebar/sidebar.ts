@@ -73,6 +73,12 @@ export class Sidebar {
       iconPath:
         'M12 2L3 6.5v11L12 22l9-4.5v-11L12 2Zm0 2.24l6.5 3.25L12 10.74 5.5 7.49 12 4.24ZM5 9.17l6 3v6.66l-6-3V9.17Zm8 9.66v-6.66l6-3v6.66l-6 3ZM12 0a1 1 0 0 1 .5.13l3.5 2a1 1 0 0 1 0 1.74l-3.5 2A1 1 0 0 1 12 6a1 1 0 0 1-.5-.13l-3.5-2a1 1 0 0 1 0-1.74l3.5-2A1 1 0 0 1 12 0Z',
     },
+    {
+      label: 'Ranking de Productos',
+      route: '/products/ranking',
+      iconPath:
+        'M18 21h-3.5v-8h3.5v8Zm-6 0H8.5V7h3.5v14Zm-6 0H2.5v-5h3.5v5ZM12 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z',
+    },
   ]);
 
   // Método que gatilla la notificación hacia el componente padre

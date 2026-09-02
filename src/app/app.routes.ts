@@ -39,7 +39,8 @@ export const routes: Routes = [
           { provide: CATEGORY_REPOSITORY, useClass: SupabaseCategoryRepository },
           { provide: BRAND_REPOSITORY, useClass: SupabaseBrandRepository }, // <-- NUEVO PROVEEDOR
           { provide: UNIT_REPOSITORY, useClass: SupabaseUnitRepository },
-          { provide: SUPPLIER_REPOSITORY, useClass: SupabaseSupplierRepository }, // <-- NUEVO PROVEEDOR
+          { provide: SUPPLIER_REPOSITORY, useClass: SupabaseSupplierRepository },
+          { provide:POS_REPOSITORY,useClass:SupabasePosRepository} // <-- NUEVO PROVEEDOR
         ],
         children: [
           {
@@ -59,6 +60,13 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./features/products/pages/product-create/product-create').then(
                 (m) => m.ProductCreate,
+              ),
+          },
+          {
+            path: 'ranking',
+            loadComponent: () =>
+              import('./features/products/pages/product-ranking/product-ranking').then(
+                (m) => m.ProductRankingComponent,
               ),
           },
         ],
@@ -90,9 +98,7 @@ export const routes: Routes = [
       },
       {
         path: 'inventorymov',
-        providers: [
-          { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository },
-        ],
+        providers: [{ provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository }],
         loadComponent: () =>
           import('./features/inventory/stock/pages/stock-list/stock-list').then((m) => m.StockList),
       },
