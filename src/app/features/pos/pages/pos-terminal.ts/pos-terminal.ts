@@ -174,69 +174,85 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   }
 
   async checkout(): Promise<void> {
-    if (this.cart().length === 0) return;
+  if (this.cart().length === 0) return;
 
-    try {
-      const apiPaymentMethod: 'Efectivo' | 'Tarjetas' | 'Transferencia' = 
-        (this.selectedPayment() === 'Debito' || this.selectedPayment() === 'Credito')
-          ? 'Tarjetas'
-          : this.selectedPayment() as 'Efectivo' | 'Transferencia';
+  try {
+    const apiPaymentMethod: 'Efectivo' | 'Tarjetas' | 'Transferencia' = 
+      (this.selectedPayment() === 'Debito' || this.selectedPayment() === 'Credito')
+        ? 'Tarjetas'
+        : this.selectedPayment() as 'Efectivo' | 'Transferencia';
 
-      const saleId = `POS-${crypto.randomUUID().substring(0, 5).toUpperCase()}`;
+    const saleId = `POS-${crypto.randomUUID().substring(0, 5).toUpperCase()}`;
 
-      const invoice: SaleInvoice = {
-        id: saleId,
-        items: this.cart(),
-        subtotal: this.cartSubtotal(),
-        tax: this.cartTax(),
-        total: this.cartTotal(),
-        paymentMethod: apiPaymentMethod,
-        createdAt: new Date().toISOString(),
-        operator: 'Carlos Mendez'
-      };
+    const invoice: SaleInvoice = {
+      id: saleId,
+      items: this.cart(),
+      subtotal: this.cartSubtotal(),
+      tax: this.cartTax(),
+      total: this.cartTotal(),
+      paymentMethod: apiPaymentMethod,
+      createdAt: new Date().toISOString(),
+      operator: 'Carlos Mendez',
+      cashClosureId: undefined
+    };
 
-      await this.posRepo.processSale(invoice);
+    // 1. Guardar la boleta principal primero (Petición base indispensable)
+    await this.posRepo.processSale(invoice);
 
-      for (const item of this.cart()) {
-        const nextStock = item.product.stock - item.quantity;
-        let nextStatus: 'Óptimo' | 'Bajo' | 'Crítico' = 'Óptimo';
-        const threshold = item.product.minStock * 0.10;
+    // 🚀 2. CREAMOS UNA COLA DE PROMESAS EN PARALELO
+    // En lugar de usar 'await' por cada producto, preparamos las peticiones en memoria
+    const promesasDeInventario: Promise<void>[] = [];
 
-        if (nextStock <= threshold) {
-          nextStatus = 'Crítico';
-        } else if (nextStock < item.product.minStock) {
-          nextStatus = 'Bajo';
-        }
+    for (const item of this.cart()) {
+      const nextStock = item.product.stock - item.quantity;
+      let nextStatus: 'Óptimo' | 'Bajo' | 'Crítico' = 'Óptimo';
+      const threshold = item.product.minStock * 0.10;
 
-        await this.productRepo.updateProduct({
-          ...item.product,
-          stock: nextStock,
-          status: nextStatus
-        });
-
-        const automatedMovement: StockMovement = {
-          id: `MOV-${crypto.randomUUID().substring(0, 5).toUpperCase()}`,
-          productName: item.product.name,
-          type: 'Egreso', 
-          quantity: -item.quantity, 
-          reason: `Despacho automático por Venta POS en Boleta de Venta #${saleId}`,
-          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          operator: invoice.operator
-        };
-
-        if (typeof (this.stockRepo as any).addMovement === 'function') {
-          await (this.stockRepo as any).addMovement(automatedMovement);
-        } else if (typeof (this.stockRepo as any).addItem === 'function') {
-          await (this.stockRepo as any).addItem(automatedMovement);
-        }
+      if (nextStock <= threshold) {
+        nextStatus = 'Crítico';
+      } else if (nextStock < item.product.minStock) {
+        nextStatus = 'Bajo';
       }
 
-      this.clearCart();
-      alert(`¡Venta procesada con éxito! Transacción: ${invoice.id}`);
-    } catch (err) {
-      this.errorMessage.set('Error en el servidor central al procesar la venta. Inténtalo de nuevo.');
+      // Preparamos la actualización del producto (Sin poner await adelante)
+      const pUpdate = this.productRepo.updateProduct({
+        ...item.product,
+        stock: nextStock,
+        status: nextStatus
+      });
+      promesasDeInventario.push(pUpdate as any);
+
+      // Preparamos el movimiento de auditoría en Kardex
+      const automatedMovement: StockMovement = {
+        id: `MOV-${crypto.randomUUID().substring(0, 5).toUpperCase()}`,
+        productName: item.product.name,
+        type: 'Egreso', 
+        quantity: -item.quantity, 
+        reason: `Despacho automático por Venta POS en Boleta de Venta #${saleId}`,
+        date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        operator: invoice.operator
+      };
+
+      // Agregamos la petición de Kardex a la cola asíncrona
+      if (typeof (this.stockRepo as any).addMovement === 'function') {
+        promesasDeInventario.push((this.stockRepo as any).addMovement(automatedMovement));
+      } else if (typeof (this.stockRepo as any).addItem === 'function') {
+        promesasDeInventario.push((this.stockRepo as any).addItem(automatedMovement));
+      }
     }
+
+    // 🚀 3. DISPARO SIMULTÁNEO:
+    // Se envían todas las actualizaciones de stock y Kardex juntas en un solo viaje de internet.
+    // La venta se completará en lo que tarde la petición más lenta (aprox 600ms en total).
+    await Promise.all(promesasDeInventario);
+
+    this.clearCart();
+    alert(`¡Venta procesada con éxito! Transacción: ${invoice.id}`);
+  } catch (err) {
+    this.errorMessage.set('Error en el servidor central al procesar la venta. Inténtalo de nuevo.');
   }
+}
+
 
   formatVisual(value: number | string): string {
     const numValue = typeof value === 'number' 

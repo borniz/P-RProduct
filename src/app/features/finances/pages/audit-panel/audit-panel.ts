@@ -32,16 +32,28 @@ export class AuditPanelComponent implements OnInit { // <-- Implementa la interf
 
   // Ejecuta la recarga limpia invocando los cargadores de los repositorios inyectados
   private refreshFinancialData(): void {
-    console.log('🔄 Refrescando balance fiscal de B&R Solutions desde Supabase...');
-    
-    // Si tus repositorios exponen un método para forzar la carga, se gatillan aquí
-    if (typeof (this.posRepo as any).load === 'function') {
-      (this.posRepo as any).load();
-    }
-    if (typeof (this.closureRepo as any).load === 'function') {
-      (this.closureRepo as any).load();
-    }
+  console.log('🔄 Refrescando balance fiscal de B&R Solutions desde Supabase...');
+  
+  // 1. Forzamos a los repositorios a ir a buscar los datos frescos a la nube
+  if (typeof (this.posRepo as any).load === 'function') {
+    (this.posRepo as any).load();
   }
+  if (typeof (this.closureRepo as any).load === 'function') {
+    (this.closureRepo as any).load();
+  }
+
+  // 2. 🚀 TRUCO DE RE-RENDERIZADO TRANSACCIONAL
+  // Forzamos un micro-parpadeo en la señal del formulario de efectivo real.
+  // Esto obliga al motor reactivo de Angular a marcar el árbol de cómputos
+  // como "sucio" (dirty), forzando a que 'activeSales()', 'todaySales()'
+  // y 'todayTotals()' se redibujen con los datos nuevos sin dar F5.
+  const currentInput = this.realCashInput();
+  this.realCashInput.set(' '); 
+  
+  setTimeout(() => {
+    this.realCashInput.set(currentInput);
+  }, 50);
+}
 
   // 📌 FILTRADO CONTABLE: Muestra únicamente las boletas que NO tienen un cierre asignado (Jornada Viva)
   readonly activeSales = computed(() => {
@@ -134,4 +146,5 @@ export class AuditPanelComponent implements OnInit { // <-- Implementa la interf
       maximumFractionDigits: 0,
     }).format(val);
   }
+  
 }
