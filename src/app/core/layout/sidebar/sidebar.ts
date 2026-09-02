@@ -1,5 +1,6 @@
-import { Component, output, signal } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 interface MenuItem {
   label: string;
@@ -16,7 +17,9 @@ interface MenuItem {
 export class Sidebar {
   // Evento nativo moderno para avisarle al AppShell que se seleccionó una opción
   readonly linkClicked = output<void>();
-
+  private readonly authService = inject(AuthService);
+readonly currentOperatorName = this.authService.currentOperatorName;
+  readonly currentOperatorRole = this.authService.currentOperatorRole;
   // Canales de navegación basados en el diseño real de tu ERP FERREMAS
   readonly menuItems = signal<MenuItem[]>([
     {
