@@ -164,7 +164,6 @@ export class DashboardComponent implements OnInit {
       }
     });
 
-    console.log('📈 [ÉXITO] Matriz contable de productos generada:', Object.keys(matrix));
 
     return Object.entries(matrix).map(([name, data]) => ({
       name,
