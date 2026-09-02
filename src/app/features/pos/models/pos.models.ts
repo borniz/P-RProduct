@@ -15,4 +15,5 @@ export interface SaleInvoice {
   paymentMethod: 'Efectivo' | 'Tarjetas' | 'Transferencia';
   createdAt: string;
   operator: string;
+  cashClosureId?: string;
 }

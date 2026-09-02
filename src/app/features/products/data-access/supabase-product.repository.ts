@@ -18,7 +18,9 @@ export class SupabaseProductRepository implements ProductRepository {
     // Disparamos la carga inicial de datos de forma automática al instanciar el ERP
     this.loadProductsFromSupabase();
   }
-
+ async load(): Promise<void> {
+    await this.loadProductsFromSupabase();
+  }
   getProducts(): Signal<Product[]> {
     return this._products.asReadonly();
   }

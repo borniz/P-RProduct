@@ -7,6 +7,7 @@ import { STOCK_REPOSITORY } from './features/inventory/stock/data-access/stock.r
 import { SupabaseStockRepository } from './features/inventory/stock/data-access/supabase-stock.repository';
 import { SupabaseProductRepository } from './features/products/data-access/supabase-product.repository';
 
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),

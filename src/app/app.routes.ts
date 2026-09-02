@@ -14,6 +14,8 @@ import { SUPPLIER_REPOSITORY } from './features/suppliers/data-access/supplier.r
 import { SupabaseSupplierRepository } from './features/suppliers/data-access/supabase-supplier.repository';
 import { POS_REPOSITORY } from './features/pos/data-acces/pos.repository';
 import { SupabasePosRepository } from './features/pos/data-acces/supabase-pos.repository';
+import { SupabaseCashClosureRepository } from './features/finances/data-access/supabase-cash-closure.repository';
+import { CASH_CLOSURE_REPOSITORY } from './features/finances/data-access/cash-closure.repository';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -26,7 +28,7 @@ export const routes: Routes = [
         providers: [
           { provide: PRODUCT_REPOSITORY, useClass: SupabaseProductRepository },
           { provide: STOCK_REPOSITORY, useClass: SupabaseStockRepository },
-          { provide: POS_REPOSITORY, useClass: SupabasePosRepository }
+          { provide: POS_REPOSITORY, useClass: SupabasePosRepository },
         ],
         loadComponent: () =>
           import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
@@ -41,7 +43,7 @@ export const routes: Routes = [
           { provide: CATEGORY_REPOSITORY, useClass: SupabaseCategoryRepository },
           { provide: BRAND_REPOSITORY, useClass: SupabaseBrandRepository }, // <-- NUEVO PROVEEDOR
           { provide: UNIT_REPOSITORY, useClass: SupabaseUnitRepository },
-          {provide:SUPPLIER_REPOSITORY,useClass:SupabaseSupplierRepository} // <-- NUEVO PROVEEDOR
+          { provide: SUPPLIER_REPOSITORY, useClass: SupabaseSupplierRepository }, // <-- NUEVO PROVEEDOR
         ],
         children: [
           {
@@ -110,6 +112,17 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/pos/pages/pos-terminal.ts/pos-terminal').then(
             (m) => m.PosTerminalComponent,
+          ),
+      },
+      {
+        path: 'inventory/finances',
+        providers: [
+          { provide: CASH_CLOSURE_REPOSITORY, useClass: SupabaseCashClosureRepository },
+          { provide: POS_REPOSITORY, useClass: SupabasePosRepository },
+        ],
+        loadComponent: () =>
+          import('./features/finances/pages/audit-panel/audit-panel').then(
+            (m) => m.AuditPanelComponent,
           ),
       },
       {

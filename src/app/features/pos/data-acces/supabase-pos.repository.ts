@@ -42,6 +42,7 @@ export class SupabasePosRepository implements PosRepository {
           paymentMethod: row.payment_method,
           createdAt: row.created_at,
           operator: row.operator,
+          cashClosureId: row.cash_closure_id,
           items: JSON.parse(row.items_snapshot) // Deserializamos el JSON de los artículos
         }));
         
@@ -64,6 +65,7 @@ export class SupabasePosRepository implements PosRepository {
           total: invoice.total,
           payment_method: invoice.paymentMethod,
           operator: invoice.operator,
+          cash_closure_id: invoice.cashClosureId || null,
           items_snapshot: JSON.stringify(invoice.items) 
         }]);
 

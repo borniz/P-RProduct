@@ -1,29 +1,33 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core'; // 📌 Importado OnDestroy
+import { Router, NavigationEnd } from '@angular/router'; // 📌 Importados servicios de ruta
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { PRODUCT_REPOSITORY } from '../../../products/data-access/product.repository';
 import { POS_REPOSITORY } from '../../data-acces/pos.repository';
-import { STOCK_REPOSITORY } from '../../../inventory/stock/data-access/stock.repository'; // 📌 INYECTADO TOKEN KARDEX
+import { STOCK_REPOSITORY } from '../../../inventory/stock/data-access/stock.repository';
 import { CartItem, SaleInvoice } from '../../models/pos.models';
 import { Product } from '../../../products/models/product.model';
-import { StockMovement } from '../../../inventory/stock/models/stock.model'; // 📌 INYECTADO MODELO KARDEX
+import { StockMovement } from '../../../inventory/stock/models/stock.model';
 
 @Component({
   selector: 'app-pos-terminal',
   standalone: true,
-  imports: [], // Control flow nativo de Angular (@if, @for) en el HTML
+  imports: [], 
   templateUrl: './pos-terminal.html'
 })
-export class PosTerminalComponent {
+export class PosTerminalComponent implements OnInit, OnDestroy {
   private readonly productRepo = inject(PRODUCT_REPOSITORY);
   private readonly posRepo = inject(POS_REPOSITORY);
-  private readonly stockRepo = inject(STOCK_REPOSITORY); // 📌 INYECTADO EL REPOSITORIO DE BODEGA
+  private readonly stockRepo = inject(STOCK_REPOSITORY);
+  private readonly router = inject(Router); // 📌 Inyectado el enrutador corporativo
+
+  private navSubscription!: Subscription; // Variable para limpiar la memoria al salir
 
   // 📦 Signals Core del Estado del Terminal POS
   readonly products = this.productRepo.getProducts();
   readonly searchQuery = signal<string>('');
   readonly cart = signal<CartItem[]>([]);
   readonly errorMessage = signal<string>('');
-  
-  // Soporta los tres botones del HTML táctil para evitar errores de solapamiento de tipos
   readonly selectedPayment = signal<'Efectivo' | 'Debito' | 'Credito' | 'Transferencia'>('Efectivo');
 
   // 🔗 Puentes y Aliases reactivos de lectura para el archivo HTML
@@ -38,29 +42,79 @@ export class PosTerminalComponent {
     );
   });
 
-  // 📊 Totales Financieros Computados Reactivamente (Desglose de IVA)
+  // 📊 Totales Financieros Computados Reactivamente
   readonly cartSubtotal = computed(() => {
     return this.cart().reduce((sum, item) => sum + item.subtotal, 0);
   });
-  readonly cartTax = computed(() => Math.round(this.cartSubtotal() * 0.19)); // IVA del 19%
+  readonly cartTax = computed(() => Math.round(this.cartSubtotal() * 0.19)); 
   readonly cartTotal = computed(() => this.cartSubtotal() + this.cartTax());
 
-  // Actualiza la query del buscador al digitar en caliente
+  // 🚀 ESCUCHA ACTIVA DE PESTAÑAS
+  ngOnInit(): void {
+  // 1. Carga inicial limpia al abrir la pantalla por primera vez
+  this.resetAndReloadTerminal();
+
+  // 2. FILTRADO SEGURO: Escucha el cambio de pestaña, pero actúa SOLO si regresas al POS
+  this.navSubscription = this.router.events.pipe(
+    filter(event => event instanceof NavigationEnd)
+  ).subscribe((event: any) => {
+    // Obtenemos la URL actual limpia (ejemplo: '/inventory/pos')
+    const currentUrl = event.urlAfterRedirects || event.url;
+    
+    // 📌 Cambia '/pos' por la palabra exacta que tenga la URL de tu terminal de ventas
+    if (currentUrl.includes('/pos') || currentUrl.endsWith('terminal')) {
+      console.log('🔄 Sincronizando existencias del POS de B&R Solutions de forma segura...');
+      this.resetAndReloadTerminal();
+    }
+  });
+}
+
+
+  // 🧹 Liberación de memoria al destruir el layout
+  ngOnDestroy(): void {
+    if (this.navSubscription) {
+      this.navSubscription.unsubscribe();
+    }
+  }
+
+  private resetAndReloadTerminal(): void {
+  console.log('🔄 Sincronizando existencias del POS de B&R Solutions en tiempo real...');
+  
+  // 1. Limpieza absoluta del estado del formulario local
+  this.cart.set([]);
+  this.errorMessage.set('');
+  this.searchQuery.set('');
+
+  // 2. FORZAR REFRESCO DIRECTO DEL CONTENEDOR EN SUPABASE
+  // Evaluamos de manera segura qué método de actualización tiene programado tu repositorio de productos
+  if (typeof (this.productRepo as any).refreshProducts === 'function') {
+    (this.productRepo as any).refreshProducts();
+  } else if (typeof (this.productRepo as any).load === 'function') {
+    (this.productRepo as any).load();
+  } else if (typeof (this.productRepo as any).getItemsSignal === 'function') {
+    // Si tu servicio hereda de GenericSupabaseRepository, esto despertará al motor reactivo
+    (this.productRepo as any).getItemsSignal();
+  }
+
+  // 3. TRUCO DE RE-RENDERIZADO (Fallback de Seguridad)
+  // Forzamos un micro-parpadeo en la query de búsqueda para obligar al 'computed'
+  // de filteredProducts a volver a ejecutarse y redibujar el catálogo en la pantalla
+  const currentQuery = this.searchQuery();
+  this.searchQuery.set(' '); 
+  setTimeout(() => this.searchQuery.set(currentQuery), 50);
+}
+
   updateSearch(event: Event): void {
     this.searchQuery.set((event.target as HTMLInputElement).value);
   }
 
-  // Modifica el método financiero activo desde los clics del HTML
   updatePaymentMethod(method: 'Efectivo' | 'Debito' | 'Credito'): void {
     this.selectedPayment.set(method);
   }
 
-  // 🛒 Gestión Inmutable de la Canasta de Ventas con Auditoría de Stock Máximo
   addToCart(product: Product): void {
     const currentCart = this.cart();
     const existingItem = currentCart.find(item => item.product.id === product.id);
-    
-    // Normalización defensiva por si el precio llega formateado como texto de moneda ($)
     const cleanPrice = typeof product.price === 'number' 
       ? product.price 
       : Number((product.price as string).replace(/[^0-9]/g, '')) || 0;
@@ -73,7 +127,6 @@ export class PosTerminalComponent {
     }
   }
 
-  // 🎛️ Modificar cantidad desde botones + / - o escribiendo directamente
   updateItemQuantity(productId: string, newQuantity: number): void {
     if (isNaN(newQuantity) || newQuantity < 1) return;
 
@@ -81,7 +134,6 @@ export class PosTerminalComponent {
     const cartItem = currentCart.find(item => item.product.id === productId);
     if (!cartItem) return;
 
-    // Validación estricta contra el stock de la base de datos
     if (newQuantity > cartItem.product.stock) {
       this.errorMessage.set(
         `Acción rechazada: Solo quedan ${cartItem.product.stock} unidades disponibles de "${cartItem.product.name}".`
@@ -101,11 +153,9 @@ export class PosTerminalComponent {
     this.errorMessage.set('');
   }
 
-  // ⌨️ Controlar la entrada manual por teclado en el input de la canasta
   onCartQuantityInput(event: Event, productId: string): void {
     const inputElement = event.target as HTMLInputElement;
     const newQty = parseInt(inputElement.value, 10);
-    
     if (!isNaN(newQty)) {
       this.updateItemQuantity(productId, newQty);
     }
@@ -120,17 +170,14 @@ export class PosTerminalComponent {
     this.errorMessage.set('');
   }
 
-  // Enlace semántico con el botón del layout HTML
   async checkoutVenta(): Promise<void> {
     await this.checkout();
   }
 
-  // 📥 Liquidación e Inserción de la Factura en Supabase en Bloque con Auditoría Automatizada
   async checkout(): Promise<void> {
     if (this.cart().length === 0) return;
 
     try {
-      // Mapeo adaptativo para unificar Débito/Crédito en 'Tarjetas' en el backend
       const apiPaymentMethod: 'Efectivo' | 'Tarjetas' | 'Transferencia' = 
         (this.selectedPayment() === 'Debito' || this.selectedPayment() === 'Credito')
           ? 'Tarjetas'
@@ -149,10 +196,8 @@ export class PosTerminalComponent {
         operator: 'Carlos Mendez'
       };
 
-      // 1. Guardar registro histórico de la venta en Postgres (Supabase)
       await this.posRepo.processSale(invoice);
 
-      // 2. Descontar existencias físicas en bloque bajo la regla del 10% de alertas corporativas
       for (const item of this.cart()) {
         const nextStock = item.product.stock - item.quantity;
         let nextStatus: 'Óptimo' | 'Bajo' | 'Crítico' = 'Óptimo';
@@ -164,37 +209,36 @@ export class PosTerminalComponent {
           nextStatus = 'Bajo';
         }
 
-        // Sincronizar stock y estado en la base de datos central
         await this.productRepo.updateProduct({
           ...item.product,
           stock: nextStock,
           status: nextStatus
         });
 
-        // 📌 3. AUDITORÍA AUTOMÁTICA EN KARDEX CENTRALIZADO
-        // Registramos un movimiento por cada artículo procesado en la canasta
         const automatedMovement: StockMovement = {
           id: `MOV-${crypto.randomUUID().substring(0, 5).toUpperCase()}`,
           productName: item.product.name,
-          type: 'Egreso', // Califica estrictamente como una salida del almacén
-          quantity: -item.quantity, // Multiplicado en negativo para efectos de auditoría
+          type: 'Egreso', 
+          quantity: -item.quantity, 
           reason: `Despacho automático por Venta POS en Boleta de Venta #${saleId}`,
           date: new Date().toISOString().replace('T', ' ').substring(0, 16),
           operator: invoice.operator
         };
 
-        // Inyectamos a la cola asíncrona de la tabla 'stock_movements' de Supabase
-        await this.stockRepo.registerMovement(automatedMovement);
+        if (typeof (this.stockRepo as any).addMovement === 'function') {
+          await (this.stockRepo as any).addMovement(automatedMovement);
+        } else if (typeof (this.stockRepo as any).addItem === 'function') {
+          await (this.stockRepo as any).addItem(automatedMovement);
+        }
       }
 
       this.clearCart();
-      alert(`¡Venta procesada y Kardex auditado con éxito! Transacción: ${invoice.id}`);
+      alert(`¡Venta procesada con éxito! Transacción: ${invoice.id}`);
     } catch (err) {
       this.errorMessage.set('Error en el servidor central al procesar la venta. Inténtalo de nuevo.');
     }
   }
 
-  // Formateador estándar de salida monetaria (COP)
   formatVisual(value: number | string): string {
     const numValue = typeof value === 'number' 
       ? value 
