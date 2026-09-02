@@ -30,7 +30,6 @@ export class SupabaseProductRepository implements ProductRepository {
           (payload) => {
             // Obligamos a Angular a capturar la alerta dentro de su ciclo de control nativo
             this.zone.run(() => {
-              console.log('📡 Cambio detectado en inventario de B&R Solutions:', payload.eventType);
               
               // Convertimos el payload crudo de Postgres a nuestra entidad limpia
               const incomingProduct = this.mapToDomain(payload.new as ProductDto);
