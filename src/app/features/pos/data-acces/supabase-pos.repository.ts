@@ -1,105 +1,92 @@
-import { Injectable, inject, signal, Signal, NgZone } from '@angular/core'; // 📌 1. Importa NgZone
+import { Injectable, signal, inject, Signal } from '@angular/core';
+import { SupabaseService } from '../../../core/services/supabase.service'; // Asegura tu ruta física del cliente
 import { PosRepository } from './pos.repository';
-import { SupabaseService } from '../../../core/services/supabase.service';
 import { SaleInvoice } from '../models/pos.models';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class SupabasePosRepository implements PosRepository {
   private readonly supabase = inject(SupabaseService).client;
-  private readonly zone = inject(NgZone); // 📌 2. Inyecta el controlador de zona reactiva
 
+  // 🔒 Signal interno privado para resguardar la inmutabilidad de la colección
   private readonly _sales = signal<SaleInvoice[]>([]);
 
-  constructor() {
-    this.loadSalesFromSupabase();
-
-    setTimeout(() => {
-      this.supabase
-        .channel('cambios-ventas-pos')
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'sales_invoices' },
-          (payload) => {
-            // 🚀 LA MAGIA: Obliga a Angular a procesar la señal de internet en su zona maestra
-            this.zone.run(() => {
-              const newInvoice = this.mapToDomain(payload.new);
-              
-              this._sales.update((current) => {
-                const exists = current.some(sale => sale.id === newInvoice.id);
-                if (exists) return current;
-                
-                // Generamos un arreglo CLONADO NUEVO con [...] para re-activar los computed ajenos
-                return [newInvoice, ...current];
-              });
-            });
-          }
-        )
-        .subscribe();
-    }, 0);
-  }
-
-  async load(): Promise<void> {
-    await this.loadSalesFromSupabase();
-  }
+  // Exposición maestra emparejada con tu interfaz
+  readonly salesSignal: Signal<SaleInvoice[]> = this._sales.asReadonly();
 
   getSales(): Signal<SaleInvoice[]> {
-    return this._sales.asReadonly();
+    return this.salesSignal;
   }
 
-  async loadSalesFromSupabase(): Promise<void> {
-    try {
-      const { data, error } = await this.supabase
-        .from('sales_invoices')
-        .select('*')
-        .order('created_at', { ascending: false });
+  // 🔄 CARGADOR LOGÍSTICO: Descarga el histórico de ventas sincronizado con tu imagen de Supabase
+  async load(): Promise<void> {
+    // Se fuerza el orden descendente usando la columna exacta 'created_at' de tu foto relacional
+    const { data, error } = await this.supabase
+      .from('sales_invoices')
+      .select('*')
+      .order('created_at', { ascending: false }); 
 
-      if (error) throw error;
+    if (error) {
+      console.error('❌ Error de consulta en sales_invoices de Supabase:', error.message);
+      throw error;
+    }
 
-      if (data) {
-        const mappedSales = data.map((dto) => this.mapToDomain(dto));
-        this._sales.set([...mappedSales]);
-      }
-    } catch (err) {
-      console.error('Error al sincronizar el histórico de ventas:', err);
+    if (data) {
+      // Hidratamos y mapeamos los esquemas snake_case de PostgreSQL hacia tus variables camelCase de TypeScript
+      const mappedSales: SaleInvoice[] = data.map((r: any) => {
+        let parsedItems: any[] = [];
+        
+        // 📌 PARCHE DE COHESIÓN: Deserializa el bloque JSONB de Supabase de forma segura hacia la variable 'items'
+        if (typeof r.items_snapshot === 'string') {
+          try {
+            parsedItems = JSON.parse(r.items_snapshot);
+          } catch (e) {
+            parsedItems = [];
+          }
+        } else if (Array.isArray(r.items_snapshot)) {
+          parsedItems = r.items_snapshot;
+        }
+
+        return {
+          id: r.id,
+          subtotal: r.subtotal,
+          tax: r.tax,
+          total: r.total,
+          paymentMethod: r.payment_method, // Convierte payment_method a paymentMethod
+          operator: r.operator,
+          items: parsedItems, // 🚀 SOLUCIÓN: Asigna el snapshot JSONB directamente a la propiedad obligatoria 'items'
+          createdAt: r.created_at,
+          cashClosureId: r.cash_closure_id // Convierte cash_closure_id a cashClosureId
+        };
+      });
+
+      this._sales.set(mappedSales);
     }
   }
 
+  // 🚀 PROCESADOR DE CHECKOUT: Inserta la boleta en la base de datos central en la nube
   async processSale(invoice: SaleInvoice): Promise<void> {
-    try {
-      const { error } = await this.supabase.from('sales_invoices').insert([
-        {
-          id: invoice.id,
-          subtotal: invoice.subtotal,
-          tax: invoice.tax,
-          total: invoice.total,
-          payment_method: invoice.paymentMethod,
-          operator: invoice.operator,
-          cash_closure_id: invoice.cashClosureId || null,
-          items_snapshot: JSON.stringify(invoice.items),
-        },
-      ]);
+    const { error } = await this.supabase
+      .from('sales_invoices')
+      .insert([{
+        id: invoice.id,
+        subtotal: invoice.subtotal,
+        tax: invoice.tax,
+        total: invoice.total,
+        payment_method: invoice.paymentMethod, // Mapeado exacto a la base snake_case de tu foto
+        operator: invoice.operator,
+        // 🚀 SOLUCIÓN: Convierte o mapea el arreglo de 'items' de tu modelo hacia la columna 'items_snapshot' de Postgres
+        items_snapshot: typeof invoice.items === 'string' ? invoice.items : JSON.stringify(invoice.items),
+        cash_closure_id: invoice.cashClosureId // Mapeado exacto a la base snake_case de tu foto
+      }]);
 
-      if (error) throw error;
-      this._sales.update((current) => [invoice, ...current]);
-    } catch (err) {
-      console.error('Error al registrar la boleta:', err);
-      throw err;
+    if (error) {
+      console.error('❌ Error al insertar boleta en Supabase:', error.message);
+      throw error;
     }
-  }
 
-  private mapToDomain(dto: any): any {
-    return {
-      id: dto.id,
-      subtotal: dto.subtotal,
-      tax: dto.tax,
-      total: dto.total,
-      paymentMethod: dto.payment_method || dto.paymentMethod,
-      createdAt: dto.created_at || dto.createdAt,
-      operator: dto.operator,
-      cashClosureId: dto.cash_closure_id || dto.cashClosureId,
-      itemsSnapshot: dto.items_snapshot || dto.itemsSnapshot || null
-    };
+    // Volvemos a gatillar la recarga limpia para actualizar los balances contables en caliente
+    await this.load();
   }
 }
