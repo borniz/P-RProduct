@@ -4,6 +4,7 @@ import { SUPPLIER_REPOSITORY } from '../../../suppliers/data-access/supplier.rep
 import { PURCHASE_REPOSITORY } from '../../data-access/purchase.repository';
 import { STOCK_REPOSITORY } from '../../../inventory/stock/data-access/stock.repository';
 import { AuthService } from '../../../../core/services/auth.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { Product } from '../../../products/models/product.model';
 import { PurchaseItem, PurchaseOrder } from '../../models/purchase.model';
 import { StockMovement } from '../../../inventory/stock/models/stock.model';
@@ -11,7 +12,7 @@ import { StockMovement } from '../../../inventory/stock/models/stock.model';
 @Component({
   selector: 'app-purchase-order',
   standalone: true,
-  imports: [], // Control flow nativo de Angular (@if, @for)
+  imports: [], // Control flow nativo en plantilla (@if, @for)
   templateUrl: './purchase-order.html',
 })
 export class PurchaseOrderComponent {
@@ -20,18 +21,25 @@ export class PurchaseOrderComponent {
   private readonly purchaseRepo = inject(PURCHASE_REPOSITORY);
   private readonly stockRepo = inject(STOCK_REPOSITORY);
   private readonly authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService); // 📌 CONECTADO AL MOTOR UNIFICADO
 
-  // Signals Core de Entrada de Datos de la nube
+  // Signals de Datos Remotos
   readonly products = this.productRepo.getProducts();
   readonly suppliers = this.supplierRepo.getSuppliers();
   readonly purchaseOrders = this.purchaseRepo.getOrders();
 
-  // Estados de control de UI locales
+  // Estados Locales Reactivos
   readonly selectedSupplierName = signal<string>('');
   readonly purchaseCart = signal<PurchaseItem[]>([]);
   readonly errorMessage = signal<string>('');
 
-  // 🔍 SUGERENCIA INTELIGENTE ERP: Filtra los productos en stock crítico que pertenezcan al proveedor seleccionado
+  // Controles Avanzados de UI y Carga
+  readonly isLoading = signal<boolean>(false);
+  readonly customQuantities = signal<{ [key: string]: string }>({});
+  readonly invoiceNumbers = signal<{ [key: string]: string }>({});
+  readonly ordersInTransit = signal<{ [key: string]: boolean }>({});
+
+  // Filtro inteligente de quiebres de inventario
   readonly criticalSuggestedProducts = computed(() => {
     const supplier = this.selectedSupplierName();
     return this.products().filter(
@@ -46,11 +54,16 @@ export class PurchaseOrderComponent {
   onSelectSupplier(e: Event): void {
     const val = (e.target as HTMLSelectElement).value;
     this.selectedSupplierName.set(val);
-    this.purchaseCart.set([]); // Reseteamos la canasta si cambia de distribuidor
+    this.purchaseCart.set([]);
+    this.customQuantities.set({});
   }
 
-  // Añade un ítem al carro de compras masivo
-  addSuggestedToOrder(product: Product, qty: number = 20): void {
+  markAsInTransit(orderId: string): void {
+    this.ordersInTransit.update((dict) => ({ ...dict, [orderId]: true }));
+  }
+  // 🕹️ ADICIÓN DE LOTES AJUSTABLES
+  addSuggestedToOrder(product: Product, qty: number): void {
+    if (qty <= 0 || isNaN(qty)) return;
     const currentCart = this.purchaseCart();
     const existing = currentCart.find((item) => item.product.id === product.id);
     const cost = Number(product.buyprice.replace(/[^0-9]/g, '')) || 0;
@@ -71,9 +84,26 @@ export class PurchaseOrderComponent {
     }
   }
 
-  // 🚀 ACCIÓN A: Genera la orden en estado 'Solicitado'
+  onCustomQtyInput(e: Event, productId: string): void {
+    const input = e.target as HTMLInputElement;
+    input.value = input.value.replace(/\D/g, '');
+    this.customQuantities.update((dict) => ({ ...dict, [productId]: input.value }));
+  }
+
+  onInvoiceNumberInput(e: Event, orderId: string): void {
+    const input = e.target as HTMLInputElement;
+    this.invoiceNumbers.update((dict) => ({ ...dict, [orderId]: input.value }));
+  }
+
+  parseInt(val: string, radix: number): number {
+    return parseInt(val, radix) || 0;
+  }
+
+  // 🚀 EMISIÓN DE ORDEN ASÍNCRONA CON SLIDER OPTIMISTA
   async placeOrder(): Promise<void> {
     if (this.purchaseCart().length === 0) return;
+
+    this.isLoading.set(true);
     const orderId = `OC-${crypto.randomUUID().substring(0, 5).toUpperCase()}`;
 
     const newOrder: PurchaseOrder = {
@@ -86,63 +116,73 @@ export class PurchaseOrderComponent {
       operator: this.authService.currentOperatorName(),
     };
 
-    await this.purchaseRepo.createOrder(newOrder);
-    this.purchaseCart.set([]);
-    alert(`Orden de Compra ${orderId} emitida exitosamente.`);
+    // Retraso controlado estético de 1.2s para renderizar el loading slider corporativo
+    setTimeout(async () => {
+      try {
+        await this.purchaseRepo.createOrder(newOrder);
+        this.purchaseCart.set([]);
+        this.customQuantities.set({});
+        this.isLoading.set(false);
+        alert(`Orden de Compra ${orderId} registrada con éxito en Supabase.`);
+      } catch (err) {
+        this.errorMessage.set('Fallo de red al despachar la requisición.');
+        this.isLoading.set(false);
+      }
+    }, 1200);
   }
 
-  // 🚀 ACCIÓN B: CONSOLIDACIÓN Y COHESIÓN TOTAL EN LA NUBE (Ingresa el lote físico a bodega)
+  // 🚀 ARRIBO FISCAL DE MERCANCÍA CON TIMBRADO EN LA CAMPANA DE NOTIFICACIONES
   async acceptIncomingDelivery(order: PurchaseOrder): Promise<void> {
     try {
-      // 1. Cambiamos el estatus de la orden a 'Recibido' en Supabase
+      const billNumber = this.invoiceNumbers()[order.id]?.trim() || 'SIN-FACTURA';
+
+      // 1. Firmamos la orden en estado 'Recibido' en Supabase
       await this.purchaseRepo.receiveOrder(order.id);
 
-      // 2. Recorremos en bloque los materiales para sumarlos al inventario maestro y auditar el Kardex
+      // 2. Incrementamos las existencias en bloque en PostgreSQL y actualizamos el Kardex
       for (const item of order.items) {
-        // Localizamos el producto actual para no perder coherencia
         const targetProduct = this.products().find((p) => p.id === item.product.id);
         if (!targetProduct) continue;
 
         const nextStock = targetProduct.stock + item.quantity;
-
-        // Recalcular alertas corporativas bajo la regla del 10%
         let nextStatus: 'Óptimo' | 'Bajo' | 'Crítico' = 'Óptimo';
         if (nextStock <= targetProduct.minStock * 0.1) nextStatus = 'Crítico';
         else if (nextStock < targetProduct.minStock) nextStatus = 'Bajo';
 
-        // Modificamos el inventario en la nube
         await this.productRepo.updateProduct({
           ...targetProduct,
           stock: nextStock,
           status: nextStatus,
         });
 
-        // Inyectamos de forma automática la bitácora de auditoría al Kardex
         const automatedIngreso: StockMovement = {
           id: `MOV-${crypto.randomUUID().substring(0, 5).toUpperCase()}`,
           productName: targetProduct.name,
-          type: 'Ingreso', // Incremento de stock formal
+          type: 'Ingreso',
           quantity: item.quantity,
-          reason: `Reabastecimiento masivo según Recepción de Orden de Compra #${order.id}`,
+          reason: `Abastecimiento masivo bajo Factura Distribuidor #${billNumber} en OC #${order.id}`,
           date: new Date().toISOString().replace('T', ' ').substring(0, 16),
           operator: this.authService.currentOperatorName(),
         };
 
         await this.stockRepo.registerMovement(automatedIngreso);
       }
-      for (const item of order.items) {
-        // ... tu lógica de actualización de productos y Kardex automático
-      }
 
-      // 📌 ACCIÓN RECONECTADA: Fuerza al repositorio de productos real de Supabase
-      // a descargar las nuevas existencias físicas para que todo el ERP sincronice en caliente
+      // 📌 3. ACOPLAMIENTO REQUERIDO: Empujamos el aviso al motor computado unificado del Header
+      this.notificationService.addNotification({
+        title: 'Abastecimiento Exitoso',
+        message: `Lote de la Orden ${order.id} ingresado bajo Factura: ${billNumber}. Kardex actualizado.`,
+        type: 'info',
+        timeLabel: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      });
+
       if (this.productRepo && 'loadProductsFromSupabase' in this.productRepo) {
         await (this.productRepo as any).loadProductsFromSupabase();
       }
 
-      alert(`Lote de la Orden ${order.id} ingresado a bodega. Catálogo y Kardex actualizados.`);
+      alert(`Lote de la Orden ${order.id} consolidado correctamente.`);
     } catch (err) {
-      this.errorMessage.set('Fallo al procesar el ingreso físico del lote.');
+      this.errorMessage.set('Error crítico al procesar el ingreso físico del camión.');
     }
   }
 

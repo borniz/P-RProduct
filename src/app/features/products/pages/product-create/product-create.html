@@ -155,3 +155,29 @@
 
   </form>
 </div>
+@if (isCategoryModalOpen()) {
+  <app-generic-form-modal [metadata]="categoryMetadata" 
+                          (closeForm)="isCategoryModalOpen.set(false)" 
+                          (saveItem)="onCategoryCreated($event)">
+  </app-generic-form-modal>
+}
+
+@if (isBrandModalOpen()) {
+  <app-generic-form-modal [metadata]="brandMetadata" 
+                          (closeForm)="isBrandModalOpen.set(false)" 
+                          (saveItem)="onBrandCreated($event)">
+  </app-generic-form-modal>
+}
+
+@if (isUnitModalOpen()) {
+  <app-generic-form-modal [metadata]="unitMetadata" 
+                          (closeForm)="isUnitModalOpen.set(false)" 
+                          (saveItem)="onUnitCreated($event)">
+  </app-generic-form-modal>
+}
+@if (isSupplierModalOpen()) {
+  <app-generic-form-modal [metadata]="supplierMetadata" 
+                          (closeForm)="isSupplierModalOpen.set(false)" 
+                          (saveItem)="onSupplierCreated($event)">
+  </app-generic-form-modal>
+}

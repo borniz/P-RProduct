@@ -1,4 +1,4 @@
-import { Injectable, inject, computed, Signal } from '@angular/core';
+import { Injectable, inject, computed, signal, Signal } from '@angular/core';
 import { PRODUCT_REPOSITORY } from '../../features/products/data-access/product.repository';
 import { STOCK_REPOSITORY } from '../../features/inventory/stock/data-access/stock.repository';
 
@@ -21,7 +21,9 @@ export class NotificationService {
   private readonly products = this.productService.getProducts();
   private readonly movements = this.stockService.getMovements();
 
-  // 📌 SEÑAL COMPUTADA GLOBAL: El motor inteligente de alertas unificadas
+  // 📌 NUEVA SEÑAL COMPLEMENTARIA: Almacena notificaciones manuales/específicas (como el arribo de Órdenes de Compra)
+  private readonly _manualNotifications = signal<AppNotification[]>([]);
+  // 📌 SEÑAL COMPUTADA GLOBAL: El motor inteligente de alertas unificadas en tiempo real
   readonly notifications: Signal<AppNotification[]> = computed(() => {
     const list: AppNotification[] = [];
 
@@ -48,21 +50,32 @@ export class NotificationService {
 
     // 📦 2. EVALUAR REGISTROS DE KARDEX (Muestra los últimos 3 movimientos de Supabase)
     this.movements().slice(0, 3).forEach(mov => {
-      const isIngreso = mov.type === 'Ingreso';
       const qtyAbs = Math.abs(mov.quantity);
-      
       list.push({
         id: `NOT-MOV-${mov.id}`,
         title: `Movimiento: ${mov.type}`,
         message: `Se registraron ${qtyAbs} unidades de "${mov.productName}". Motivo: ${mov.reason}.`,
         type: 'info',
-        timeLabel: mov.date.substring(11, 16) // Extrae la hora (HH:MM)
+        timeLabel: mov.date && mov.date.length >= 16 ? mov.date.substring(11, 16) : 'Ahora' // Extrae la hora (HH:MM)
       });
     });
 
-    return list;
+    // 📥 3. UNIFICAR NOTIFICACIONES DE COMPRAS EMITIDAS MANUALMENTE
+    // Inyecta el arreglo de las órdenes de compra formalizadas en caliente
+    return [...this._manualNotifications(), ...list];
   });
 
-  // 🔔 Contador reactivo para la burbuja roja encima del icono de la campana en el header
+  // 🔔 Contador reactivo automático para la burbuja roja encima del icono de la campana en el header
   readonly unreadCount = computed(() => this.notifications().length);
+
+  // 🚀 CONEXIÓN DE ACCESO FORMAL EXIGIDA: Permite al módulo de compras inyectar alertas de arribo masivo
+  addNotification(notif: Omit<AppNotification, 'id'>): void {
+    const customNotif: AppNotification = {
+      ...notif,
+      id: `NOT-MANUAL-${crypto.randomUUID().substring(0, 5).toUpperCase()}`
+    };
+
+    // Actualizamos la señal local complementaria. El 'computed' unificado reaccionará al vuelo
+    this._manualNotifications.update(current => [customNotif, ...current]);
+  }
 }
