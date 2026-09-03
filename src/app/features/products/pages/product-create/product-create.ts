@@ -5,6 +5,7 @@ import { CATEGORY_REPOSITORY } from '../../../inventory/categories/data-access/c
 import { UNIT_REPOSITORY } from '../../../inventory/units/data-access/unit.repository';
 import { BRAND_REPOSITORY } from '../../../inventory/brands/data-access/brands.repository';
 import { Product } from '../../models/product.model';
+import { BarcodeFormat } from '@zxing/library';
 
 // 📌 IMPORTACIONES ARQUITECTÓNICAS GENÉRICAS
 import {
@@ -13,11 +14,12 @@ import {
 } from '../../../inventory/shared/models/generic-inventory.model';
 import { GenericFormModalComponent } from '../../../inventory/shared/components/generic-form-modal/generic-form-modal';
 import { SUPPLIER_REPOSITORY } from '../../../suppliers/data-access/supplier.repository';
+import { ZXingScannerModule } from '@zxing/ngx-scanner';
 
 @Component({
   selector: 'app-product-create',
   standalone: true,
-  imports: [GenericFormModalComponent], // <-- REGISTRADO EL COMPONENTE COMPARTIDO
+  imports: [GenericFormModalComponent, ZXingScannerModule],
   templateUrl: './product-create.html',
 })
 export class ProductCreate implements OnInit {
@@ -25,9 +27,14 @@ export class ProductCreate implements OnInit {
   private readonly categoryService = inject(CATEGORY_REPOSITORY);
   private readonly brandService = inject(BRAND_REPOSITORY);
   private readonly unitService = inject(UNIT_REPOSITORY);
-
+  private readonly supplierService = inject(SUPPLIER_REPOSITORY);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+
+  // Controladores locales de hardware óptico
+  readonly isScannerActive = signal<boolean>(false);
+  readonly productId = signal<string | null>(null);
+  readonly errorMessage = signal<string>('');
 
   // Signals de Control para los Inputs del Formulario
   readonly name = signal<string>('');
@@ -35,85 +42,92 @@ export class ProductCreate implements OnInit {
   readonly category = signal<string>('');
   readonly brand = signal<string>('');
   readonly unit = signal<string>('');
+  readonly supplier = signal<string>('');
   readonly stock = signal<string>('0');
   readonly minStock = signal<string>('0');
   readonly buyPrice = signal<string>('');
   readonly unitPrice = signal<string>('');
   readonly imagePreview = signal<string | null>(null);
-  readonly isSupplierModalOpen = signal<boolean>(false);
 
-  // 📌 SIGNALS REEL PARA ABRIR LOS MODALES FLOTANTES SIN REDIRECCIÓN
+  // Controladores reactivos de modales flotantes en cascada
   readonly isCategoryModalOpen = signal<boolean>(false);
   readonly isBrandModalOpen = signal<boolean>(false);
   readonly isUnitModalOpen = signal<boolean>(false);
+  readonly isSupplierModalOpen = signal<boolean>(false);
 
-  // 📌 METADATOS DE CONFIGURACIÓN SEMÁNTICA DUAL
-  readonly categoryMetadata: ModuleMetadata = {
-    entityName: 'Categoría',
-    pluralName: 'Categorías',
-    subtitle: 'Parámetro rápido',
-    metricLabel: '',
-    hasDescription: true,
-    descriptionPlaceholder: 'Alcance...',
-  };
-  readonly brandMetadata: ModuleMetadata = {
-    entityName: 'Marca',
-    pluralName: 'Marcas',
-    subtitle: 'Parámetro rápido',
-    metricLabel: '',
-    hasDescription: true,
-    descriptionPlaceholder: 'Detalles...',
-  };
-  readonly unitMetadata: ModuleMetadata = {
-    entityName: 'Unidad',
-    pluralName: 'Unidades',
-    subtitle: 'Parámetro rápido',
-    metricLabel: '',
-    hasDescription: false,
-    descriptionPlaceholder: '',
-  };
-
-  readonly supplierMetadata: ModuleMetadata = {
-    entityName: 'Proveedor',
-    pluralName: 'Proveedores',
-    subtitle: 'Parámetro rápido',
-    metricLabel: '',
-    hasDescription: true,
-    descriptionPlaceholder:
-      'Ej: Contacto corporativo, correo electrónico, fletes o condiciones de crédito...',
-  };
-
-  readonly productId = signal<string | null>(null);
-  readonly errorMessage = signal<string>('');
-
+  // Colecciones de datos vivas de Supabase
   readonly categoriesList = this.categoryService.getCategories();
   readonly brandsList = this.brandService.getBrands();
   readonly unitsList = this.unitService.getUnits();
-  private readonly supplierService = inject(SUPPLIER_REPOSITORY);
-  readonly isEditMode = computed(() => this.productId() !== null);
-  readonly pageTitle = computed(() =>
-    this.isEditMode() ? 'Actualizar Producto' : 'Nuevo Producto',
-  );
-  readonly pageSubtitle = computed(() =>
-    this.isEditMode()
-      ? 'Modifica las existencias o valores comerciales del artículo'
-      : 'Registra un nuevo artículo en el catálogo maestro de B&R Solutions',
-  );
-  readonly submitButtonText = computed(() =>
-    this.isEditMode() ? 'Guardar Cambios' : 'Registrar Artículo',
-  );
-  readonly supplier = signal<string>('');
   readonly suppliersList = this.supplierService.getSuppliers();
+
+  // Metadatos semánticos de configuración polimórfica
+  readonly categoryMetadata: ModuleMetadata = {
+    entityName: 'Categoría', pluralName: 'Categorías', subtitle: 'Parámetro rápido',
+    metricLabel: '', hasDescription: true, descriptionPlaceholder: 'Alcance...'
+  };
+  readonly brandMetadata: ModuleMetadata = {
+    entityName: 'Marca', pluralName: 'Marcas', subtitle: 'Parámetro rápido',
+    metricLabel: '', hasDescription: true, descriptionPlaceholder: 'Detalles...'
+  };
+  readonly unitMetadata: ModuleMetadata = {
+    entityName: 'Unidad', pluralName: 'Unidades', subtitle: 'Parámetro rápido',
+    metricLabel: '', hasDescription: false, descriptionPlaceholder: ''
+  };
+  readonly supplierMetadata: ModuleMetadata = {
+    entityName: 'Proveedor', pluralName: 'Proveedores', subtitle: 'Parámetro rápido',
+    metricLabel: '', hasDescription: true, descriptionPlaceholder: 'Ej: Contacto corporativo, fletes o condiciones...'
+  };
+
+  readonly allowedFormats = [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.CODE_128];
+
+  readonly isEditMode = computed(() => this.productId() !== null);
+  readonly pageTitle = computed(() => this.isEditMode() ? 'Actualizar Producto' : 'Nuevo Producto');
+  readonly pageSubtitle = computed(() => this.isEditMode() 
+    ? 'Modifica las existencias o valores comerciales del artículo' 
+    : 'Registra un nuevo artículo en el catálogo maestro de B&R Solutions'
+  );
+  readonly submitButtonText = computed(() => this.isEditMode() ? 'Guardar Cambios' : 'Registrar Artículo');
 
   ngOnInit(): void {
     if (this.categoriesList().length > 0) this.category.set(this.categoriesList()[0].name);
     if (this.brandsList().length > 0) this.brand.set(this.brandsList()[0].name);
     if (this.unitsList().length > 0) this.unit.set(this.unitsList()[0].name);
     if (this.suppliersList().length > 0) this.supplier.set(this.suppliersList()[0].name);
+    
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.productId.set(idParam);
       this.loadProductData(idParam);
+    }
+  }
+  toggleCameraScanner(): void {
+    this.isScannerActive.update(current => !current);
+  }
+
+  onBarcodeScanSuccess(scannedCode: any): void {
+    const codeString = String(scannedCode || '').trim().toUpperCase();
+    if (!codeString) return;
+
+    this.sku.set(codeString); 
+    this.isScannerActive.set(false);
+    this.playScanBeep();
+  }
+
+  private playScanBeep(): void {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+    } catch (e) {
+      console.log('Audio no soportado');
     }
   }
 
@@ -138,35 +152,30 @@ export class ProductCreate implements OnInit {
     }
   }
 
-  // --- MANEJADORES DE EVENTOS INTERCEPTORES CORREGIDOS ---
   onSelectCategory(e: Event): void {
     const val = (e.target as HTMLSelectElement).value;
-    if (val === 'categoryCreate') {
-      this.isCategoryModalOpen.set(true);
-    } else {
-      this.category.set(val);
-    }
+    if (val === 'categoryCreate') this.isCategoryModalOpen.set(true);
+    else this.category.set(val);
   }
 
   onSelectBrand(e: Event): void {
     const val = (e.target as HTMLSelectElement).value;
-    if (val === 'brandCreate') {
-      this.isBrandModalOpen.set(true);
-    } else {
-      this.brand.set(val);
-    }
+    if (val === 'brandCreate') this.isBrandModalOpen.set(true);
+    else this.brand.set(val);
   }
 
   onSelectUnit(e: Event): void {
     const val = (e.target as HTMLSelectElement).value;
-    if (val === 'unitCreate') {
-      this.isUnitModalOpen.set(true);
-    } else {
-      this.unit.set(val);
-    }
+    if (val === 'unitCreate') this.isUnitModalOpen.set(true);
+    else this.unit.set(val);
   }
 
-  // --- CALLBACKS DE PERSISTENCIA INMEDIATA ---
+  onSelectSupplier(e: Event): void {
+    const val = (e.target as HTMLSelectElement).value;
+    if (val === 'supplierCreate') this.isSupplierModalOpen.set(true);
+    else this.supplier.set(val);
+  }
+
   onCategoryCreated(item: GenericInventoryItem): void {
     this.categoryService.addCategory(item);
     this.category.set(item.name);
@@ -185,38 +194,19 @@ export class ProductCreate implements OnInit {
     this.isUnitModalOpen.set(false);
   }
 
-  // --- COMPORTAMIENTO FINANCIERO Y NUMÉRICO ---
-  onInputName(e: Event): void {
-    this.name.set((e.target as HTMLInputElement).value);
-  }
-  onInputSku(e: Event): void {
-    this.sku.set((e.target as HTMLInputElement).value);
-  }
-  onInputStock(e: Event): void {
-    this.handleNumericInput(e, this.stock);
-  }
-  onInputMinStock(e: Event): void {
-    this.handleNumericInput(e, this.minStock);
-  }
-  onInputBuyPrice(e: Event): void {
-    this.handleNumericInput(e, this.buyPrice);
-  }
-  onInputUnitPrice(e: Event): void {
-    this.handleNumericInput(e, this.unitPrice);
-  }
-  onSelectSupplier(e: Event): void {
-    const val = (e.target as HTMLSelectElement).value;
-    if (val === 'supplierCreate') {
-      this.isSupplierModalOpen.set(true);
-    } else {
-      this.supplier.set(val);
-    }
-  }
   onSupplierCreated(item: GenericInventoryItem): void {
-    this.supplierService.addSuppliers(item); // Persiste en vivo en la tabla 'suppliers' de Supabase
-    this.supplier.set(item.name); // Selecciona automáticamente el proveedor recién creado en el formulario
-    this.isSupplierModalOpen.set(false); // Cierra el modal flotante
+    this.supplierService.addSuppliers(item);
+    this.supplier.set(item.name);
+    this.isSupplierModalOpen.set(false);
   }
+
+  onInputName(e: Event): void { this.name.set((e.target as HTMLInputElement).value); }
+  onInputSku(e: Event): void { this.sku.set((e.target as HTMLInputElement).value); }
+  onInputStock(e: Event): void { this.handleNumericInput(e, this.stock); }
+  onInputMinStock(e: Event): void { this.handleNumericInput(e, this.minStock); }
+  onInputBuyPrice(e: Event): void { this.handleNumericInput(e, this.buyPrice); }
+  onInputUnitPrice(e: Event): void { this.handleNumericInput(e, this.unitPrice); }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
@@ -230,9 +220,7 @@ export class ProductCreate implements OnInit {
     reader.readAsDataURL(file);
   }
 
-  removeImage(): void {
-    this.imagePreview.set(null);
-  }
+  removeImage(): void { this.imagePreview.set(null); }
 
   formatVisual(value: string | number | null | undefined): string {
     if (value === null || value === undefined || value === '') return '';
@@ -248,7 +236,7 @@ export class ProductCreate implements OnInit {
     input.value = this.formatVisual(rawValue);
   }
 
-  async onSubmit(event: Event): Promise<void>  {
+  async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
     if (!this.name().trim() || !this.unitPrice().trim() || !this.buyPrice().trim()) {
       this.errorMessage.set('Campos obligatorios incompletos.');
@@ -258,17 +246,11 @@ export class ProductCreate implements OnInit {
     const numericStock = this.stock() ? parseInt(this.stock(), 10) : 0;
     const numericMinStock = this.minStock() ? parseInt(this.minStock(), 10) : 0;
 
-    // 📌 IMPLEMENTACIÓN DE LA NUEVA DIRECTIVA MATEMÁTICA CORPORATIVA (10% DEL MÍNIMO)
     let computedStatus: 'Óptimo' | 'Bajo' | 'Crítico' = 'Óptimo';
     const criticalThreshold = numericMinStock * 0.1;
 
-    if (numericStock <= criticalThreshold) {
-      computedStatus = 'Crítico'; // Stock igual o por debajo del 10% del mínimo
-    } else if (numericStock < numericMinStock) {
-      computedStatus = 'Bajo'; // Stock por debajo del mínimo pero superior al 10%
-    } else {
-      computedStatus = 'Óptimo'; // Stock que cumple las condiciones de seguridad
-    }
+    if (numericStock <= criticalThreshold) computedStatus = 'Crítico';
+    else if (numericStock < numericMinStock) computedStatus = 'Bajo';
 
     const productPayload: Product = {
       id: this.isEditMode() ? this.productId()! : crypto.randomUUID(),
@@ -282,23 +264,20 @@ export class ProductCreate implements OnInit {
       minStock: numericMinStock,
       status: computedStatus,
       buyprice: this.buyPrice(),
-      price: this.unitPrice().startsWith('$')
-        ? this.unitPrice().trim()
-        : `$ ${this.unitPrice().trim()}`,
+      price: this.unitPrice().startsWith('$') ? this.unitPrice().trim() : `$ ${this.unitPrice().trim()}`,
       imageurl: this.imagePreview() || undefined,
     };
-try {
-  if (this.isEditMode()) {
-      this.productService.updateProduct(productPayload);
-    } else {
-      this.productService.addProduct(productPayload);
-    }
 
-    this.router.navigate(['/products']);
-} catch (error) {
-  this.errorMessage.set('No se pudieron guardar los cambios en el servidor central.');
-}
-    
+    try {
+      if (this.isEditMode()) {
+        this.productService.updateProduct(productPayload);
+      } else {
+        this.productService.addProduct(productPayload);
+      }
+      this.router.navigate(['/products']);
+    } catch (error) {
+      this.errorMessage.set('No se pudieron guardar los cambios en el servidor central.');
+    }
   }
 
   cancel(): void {

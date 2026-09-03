@@ -42,12 +42,45 @@
       <input (input)="onInputName($event)" [value]="name()" type="text" placeholder="Ej. Sierra Circular 1400W" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors" />
     </div>
 
-    <!-- Fila Doble: SKU y Categoría Dinámica -->
+    <!-- Fila Doble: SKU con Escáner de Cámara y Categoría -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="space-y-1">
-        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Código SKU (Opcional)</label>
-        <input (input)="onInputSku($event)" [value]="sku()" type="text" placeholder="Ej. HER-SC1400" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors uppercase" />
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Código SKU o de Barras *</label>
+        
+        <!-- 📌 VISOR DE ESCÁNER ÓPTICO ELÁSTICO DE B&R SOLUTIONS -->
+        @if (isScannerActive()) {
+          <div class="w-full bg-slate-950 border border-status-info/30 rounded-xl overflow-hidden relative shadow-inner animate-fade-in aspect-video max-h-52 mb-2 flex items-center justify-center">
+            <zxing-scanner [formats]="allowedFormats"
+                           (scanSuccess)="onBarcodeScanSuccess($any($event))"
+                           class="w-full h-full object-cover">
+            </zxing-scanner>
+            <div class="absolute inset-x-0 h-0.5 bg-status-info shadow-[0_0_10px_#0284c7] animate-pulse top-1/2"></div>
+          </div>
+        }
+
+        <div class="flex items-center gap-2">
+          <div class="flex-1 relative">
+            <input [value]="sku()" 
+                   (input)="sku.set($any($event.target).value)"
+                   type="text" 
+                   placeholder="Ej. HER-SC1400 o 7501234567890" 
+                   class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors uppercase font-mono text-xs" />
+          </div>
+
+          <!-- 📸 BOTÓN GATILLO ÓPTICO (Abre la cámara trasera en smartphones) -->
+          <button (click)="toggleCameraScanner()"
+                  type="button"
+                  [class.bg-status-info/20]="isScannerActive()" [class.text-status-info]="isScannerActive()" [class.border-status-info/40]="isScannerActive()"
+                  [class.bg-brand-surface]="!isScannerActive()" [class.border-brand-border]="!isScannerActive()"
+                  class="p-2.5 rounded-xl border text-slate-400 hover:text-white transition-all cursor-pointer group shrink-0"
+                  title="Escanear código de la caja">
+            <svg class="w-4 h-4 group-hover:scale-105 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316A2.31 2.31 0 0014.713 3.75H9.287a2.31 2.31 0 00-1.641 1.055l-.82 1.316zM10.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" />
+            </svg>
+          </button>
+        </div>
       </div>
+
       <div class="space-y-1">
         <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Categoría de Lote</label>
         <select (change)="onSelectCategory($event)" [value]="category()" class="w-full bg-brand-bg border border-brand-border text-slate-600 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors cursor-pointer font-medium">
@@ -58,7 +91,7 @@
         </select>
       </div>
     </div>
-        <!-- 📌 NUEVA GRILA TRIPLE: Marcas, Unidades y Proveedores Dinámicos Conectados en Vivo -->
+    <!-- 📌 GRILA TRIPLE: Marcas, Unidades y Proveedores Dinámicos Conectados en Vivo -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div class="space-y-1">
         <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Fabricante / Marca</label>
@@ -76,29 +109,25 @@
         </select>
       </div>
 
-      <!-- 📌 NUEVO FILTRO EN LÍNEA: Selector de Cuentas de Proveedores Reales -->
       <div class="space-y-1">
         <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Proveedor de Abastecimiento</label>
         <select (change)="onSelectSupplier($event)" [value]="supplier()" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors cursor-pointer font-medium text-xs">
           @for (sup of suppliersList(); track  sup.id) {
             <option [value]="sup.name">{{ sup.name }}</option>
           }
-          <option value="supplierCreate" class="text-status-purple font-semibold bg-brand-surface/90">
-            + Crear Proveedor...
-          </option>
+          <option value="supplierCreate" class="text-status-purple font-semibold bg-brand-surface/90"> + Crear Proveedor... </option>
         </select>
       </div>
     </div>
 
-
     <!-- Stock Inicial y Stock Mínimo -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="space-y-1">
-        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Stock Inicial</label>
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Stock Inicial *</label>
         <input (input)="onInputStock($event)" [value]="formatVisual(stock())" type="text" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors font-mono" />
       </div>
       <div class="space-y-1">
-        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Stock Mínimo</label>
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Stock Mínimo *</label>
         <input (input)="onInputMinStock($event)" [value]="formatVisual(minStock())" type="text" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors font-mono" />
       </div>
     </div>
@@ -106,49 +135,23 @@
     <!-- Precios de Compra y Venta -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="space-y-1">
-        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Precio de Compra  </label>
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Precio de Compra *</label>
         <input (input)="onInputBuyPrice($event)" [value]="formatVisual(buyPrice())" type="text" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors font-mono" />
       </div>
       <div class="space-y-1">
-        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Precio de Venta  </label>
+        <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">Precio de Venta Mostrador *</label>
         <input (input)="onInputUnitPrice($event)" [value]="formatVisual(unitPrice())" type="text" class="w-full bg-brand-bg border border-brand-border text-slate-200 px-3 py-2.5 rounded-xl focus:outline-none focus:border-status-info transition-colors font-mono" />
       </div>
     </div>
 
-    <!-- Botonera Operativa Unificada -->
-    <div class="pt-4 border-t border-brand-border flex items-center justify-end gap-3">
-      <button (click)="cancel()" type="button" class="px-4 py-2.5 border border-brand-border text-slate-400 hover:text-white rounded-xl font-semibold hover:bg-brand-hover transition-all cursor-pointer">
-        Cancelar
-      </button>
-      <button type="submit" class="px-5 py-2.5 bg-status-info hover:bg-status-info/90 text-white rounded-xl font-semibold shadow-md transition-all cursor-pointer">
-        {{ submitButtonText() }}
+    <!-- Botonera de Envío Final -->
+    <div class="pt-4 flex items-center justify-end gap-3">
+      <button (click)="cancel()" type="button" class="px-5 py-2.5 border border-brand-border text-slate-400 hover:text-white rounded-xl font-semibold transition-colors cursor-pointer hover:bg-brand-hover/10">Cancelar</button>
+      <button type="submit" class="px-5 py-2.5 bg-status-info hover:bg-status-info/90 text-white rounded-xl font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+        <span>Guardar en Catálogo</span>
       </button>
     </div>
+
   </form>
 </div>
-@if (isCategoryModalOpen()) {
-  <app-generic-form-modal [metadata]="categoryMetadata" 
-                          (closeForm)="isCategoryModalOpen.set(false)" 
-                          (saveItem)="onCategoryCreated($event)">
-  </app-generic-form-modal>
-}
-
-@if (isBrandModalOpen()) {
-  <app-generic-form-modal [metadata]="brandMetadata" 
-                          (closeForm)="isBrandModalOpen.set(false)" 
-                          (saveItem)="onBrandCreated($event)">
-  </app-generic-form-modal>
-}
-
-@if (isUnitModalOpen()) {
-  <app-generic-form-modal [metadata]="unitMetadata" 
-                          (closeForm)="isUnitModalOpen.set(false)" 
-                          (saveItem)="onUnitCreated($event)">
-  </app-generic-form-modal>
-}
-@if (isSupplierModalOpen()) {
-  <app-generic-form-modal [metadata]="supplierMetadata" 
-                          (closeForm)="isSupplierModalOpen.set(false)" 
-                          (saveItem)="onSupplierCreated($event)">
-  </app-generic-form-modal>
-}
