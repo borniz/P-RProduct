@@ -1,10 +1,11 @@
-<div class="space-y-6 max-w-3xl mx-auto">
+<div class="space-y-6 max-w-3xl mx-auto animate-fade-in">
+  <!-- Encabezado de Ajustes -->
   <div>
     <h1 class="text-2xl font-bold text-white tracking-tight">Configuración del Sistema</h1>
     <p class="text-sm text-slate-400 mt-0.5">Personaliza la experiencia visual y el comportamiento del ERP</p>
   </div>
 
-  <div class="bg-brand-surface border border-brand-border rounded-2xl p-6 space-y-6 text-sm">
+  <div class="bg-brand-surface border border-brand-border rounded-2xl p-6 space-y-6 text-sm shadow-sm">
     <!-- Bloque de Preferencias de Visualización -->
     <div class="space-y-3">
       <div>
@@ -27,7 +28,7 @@
           </div>
         </button>
 
-        <!-- Tarjeta de Opción 2: Cuadrícula Visual Premium (Look como en tu Imagen POS) -->
+        <!-- Tarjeta de Opción 2: Cuadrícula Visual Premium -->
         <button (click)="changeViewMode('grid')" type="button"
                 [class]="currentMode() === 'grid' ? 'border-status-info bg-status-info/5 text-white' : 'border-brand-border bg-brand-bg text-slate-400 hover:text-white'"
                 class="flex items-start gap-4 p-4 rounded-xl border text-left transition-all cursor-pointer group">
@@ -42,5 +43,34 @@
 
       </div>
     </div>
-  </div>
-</div>
+    <div class="h-px bg-brand-border/40 w-full my-4"></div>
+
+    <!-- 📌 NUEVO BLOQUE INTEGRADO: PARÁMETROS FISCALES Y DE FACTURACIÓN -->
+    <div class="space-y-3">
+      <div>
+        <h2 class="text-base font-semibold text-white tracking-tight">Parámetros de Facturación</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Controla la carga impositiva aplicada a los carritos en la terminal de ventas POS</p>
+      </div>
+
+      <!-- Opción Interactiva Toggle Switch -->
+      <div class="flex items-center justify-between gap-4 p-4 bg-brand-bg/40 border border-brand-border/60 rounded-xl mt-2">
+        <div class="space-y-0.5 text-left min-w-0 flex-1">
+          <span class="block text-sm font-semibold text-slate-200">Facturar con Impuesto al Valor Agregado (IVA)</span>
+          <span class="block text-xs text-slate-500 max-w-xl leading-relaxed mt-0.5">
+            Al estar activo, el sistema calculará estrictamente el 19% de IVA sobre el neto de la canasta. Al apagarse, las boletas emitidas nacerán exentas (0% IVA).
+          </span>
+        </div>
+
+        <!-- Toggle Switch de Alta Fidelidad -->
+        <label class="relative inline-flex items-center cursor-pointer shrink-0 select-none">
+          <input type="checkbox" 
+                 [checked]="applyTax()" 
+                 (change)="onTaxToggle($event)" 
+                 class="sr-only peer" />
+          <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-transparent after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-status-success"></div>
+        </label>
+      </div>
+    </div>
+
+  </div> <!-- Cierre Caja Principal -->
+</div> <!-- Cierre Contenedor Maestro -->

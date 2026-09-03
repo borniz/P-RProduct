@@ -14,8 +14,15 @@ export class SettingsComponent {
 
   // Leemos la señal global expuesta de solo lectura para la UI
   readonly currentMode = this.settingsService.productViewMode;
+  readonly applyTax = this.settingsService.applyTax;
 
   changeViewMode(mode: ViewMode): void {
     this.settingsService.setViewMode(mode);
   }
+    onTaxToggle(event: Event): void {
+      alert("se cambio la configuracion")
+    const checkbox = event.target as HTMLInputElement;
+    this.settingsService.setTaxConfiguration(checkbox.checked);
+  }
+
 }

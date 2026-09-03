@@ -14,6 +14,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 // 📌 IMPORTACIONES CORE DEL MOTOR DE ESCANEO ÓPTICO
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { BarcodeFormat } from '@zxing/library';
+import { SettingsService } from '../../../../core/services/settings.service';
 
 @Component({
   selector: 'app-pos-terminal',
@@ -28,6 +29,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   private readonly posRepo = inject(POS_REPOSITORY);
   private readonly stockRepo = inject(STOCK_REPOSITORY);
   private readonly router = inject(Router);
+  private readonly settingsService = inject(SettingsService);
 
   private navSubscription!: Subscription;
 
@@ -51,6 +53,8 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     BarcodeFormat.QR_CODE,
   ];
 
+  
+
   // 🔍 Filtro en tiempo real para el buscador predictivo por Nombre o SKU
   readonly filteredProducts = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
@@ -65,8 +69,11 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   readonly cartSubtotal = computed(() => {
     return this.cart().reduce((sum, item) => sum + item.subtotal, 0);
   });
-  readonly cartTax = computed(() => Math.round(this.cartSubtotal() * 0.19));
-  readonly cartTotal = computed(() => this.cartSubtotal() + this.cartTax());
+  readonly cartTax = computed(() => {
+  return Math.round(this.cartSubtotal() * this.settingsService.taxRate());
+});
+
+readonly cartTotal = computed(() => this.cartSubtotal() + this.cartTax());
 
   // 🚀 ESCUCHA ACTIVA DE PESTAÑAS (Sincronización multilayout)
   ngOnInit(): void {
