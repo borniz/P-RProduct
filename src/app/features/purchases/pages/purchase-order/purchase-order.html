@@ -1,26 +1,4 @@
 <div class="space-y-7 animate-fade-in relative">
-  <!-- 📌 PANEL DE LOADING SLIDER AUTOMATIZADO -->
-  @if (isLoading()) {
-    <div
-      class="fixed inset-0 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center z-50 animate-fade-in"
-    >
-      <div
-        class="w-64 bg-slate-900 border border-brand-border rounded-2xl p-5 space-y-4 shadow-2xl text-center"
-      >
-        <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider animate-pulse"
-          >Emitiendo Orden a Supabase...</span
-        >
-        <div
-          class="w-full h-1.5 bg-brand-bg rounded-full overflow-hidden border border-brand-border/40"
-        >
-          <div
-            class="h-full bg-gradient-to-r from-status-info to-status-success rounded-full w-1/2 animate-[bounce_1.5s_infinite_linear]"
-          ></div>
-        </div>
-      </div>
-    </div>
-  }
-
   <!-- Encabezado Logístico -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div>
@@ -262,7 +240,7 @@
                 }
               </div>
 
-              <!-- 📌 SECCIÓN DE RECEPCIÓN FISCAL EN CASCADA -->
+              <!-- 📌 SECCIÓN DE RECEPCIÓN FISCAL EN CASCADA REPARADA -->
               <div
                 class="pt-2 border-t border-brand-border/20 flex flex-col gap-2 bg-brand-bg/40 p-2 rounded-lg"
               >
