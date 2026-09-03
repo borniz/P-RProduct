@@ -59,7 +59,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
 
   // 🔍 Filtro en tiempo real para el buscador predictivo por Nombre o SKU
   readonly filteredProducts = computed(() => {
-    alert('prueba pos')
+
   const query = this.searchQuery().toLowerCase().trim();
   const all = this.products().filter(p => p.stock > 0);
   
