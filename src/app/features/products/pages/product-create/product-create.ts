@@ -15,6 +15,7 @@ import {
 import { GenericFormModalComponent } from '../../../inventory/shared/components/generic-form-modal/generic-form-modal';
 import { SUPPLIER_REPOSITORY } from '../../../suppliers/data-access/supplier.repository';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
+import { LoadingService } from '../../../../core/services/loading.service';
 
 @Component({
   selector: 'app-product-create',
@@ -23,6 +24,7 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
   templateUrl: './product-create.html',
 })
 export class ProductCreate implements OnInit {
+  private readonly loadingService = inject(LoadingService);
   private readonly productService = inject(PRODUCT_REPOSITORY);
   private readonly categoryService = inject(CATEGORY_REPOSITORY);
   private readonly brandService = inject(BRAND_REPOSITORY);
@@ -268,18 +270,24 @@ export class ProductCreate implements OnInit {
       imageurl: this.imagePreview() || undefined,
     };
 
+    // ⚡ Encendemos el overlay reutilizable calculando el progreso lineal al vuelo
+    this.loadingService.show(this.isEditMode() ? 'Actualizando datos del artículo...' : 'Registrando nuevo producto en Supabase...');
+
     try {
       if (this.isEditMode()) {
-        this.productService.updateProduct(productPayload);
+        await this.productService.updateProduct(productPayload);
       } else {
-        this.productService.addProduct(productPayload);
+        await this.productService.addProduct(productPayload);
       }
+      
+      // 🏁 Desmontamos el overlay completando la barra al 100% de forma fluida
+      this.loadingService.hide();
       this.router.navigate(['/products']);
     } catch (error) {
+      this.loadingService.hide();
       this.errorMessage.set('No se pudieron guardar los cambios en el servidor central.');
     }
   }
-
   cancel(): void {
     this.router.navigate(['/products']);
   }

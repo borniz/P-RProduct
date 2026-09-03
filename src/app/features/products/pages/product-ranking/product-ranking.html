@@ -1,99 +1,95 @@
-<div class="space-y-7">
-  <!-- Encabezado Operativo -->
-  <div>
-    <h1 class="text-2xl font-bold text-white tracking-tight">Ranking de Rotación de Inventario</h1>
-    <p class="text-sm text-slate-400 mt-0.5">Métricas de tracción comercial ordenadas desde el artículo más vendido hasta el de menor movimiento</p>
+<div class="space-y-7 animate-fade-in">
+  <!-- Encabezado Analítico -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-white tracking-tight">Ranking de Rotación de Inventario</h1>
+      <p class="text-sm text-slate-400 mt-0.5">Auditoría de demanda comercial, volumen de salidas de mostrador y recaudación acumulada</p>
+    </div>
+
+    <!-- Buscador en línea -->
+    <div class="w-full sm:w-72 relative">
+      <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.603 10.603z" /></svg>
+      </span>
+      <input (input)="updateSearch($event)" [value]="searchQuery()" type="text" placeholder="Filtrar ranking..." class="w-full bg-brand-surface border border-brand-border text-sm text-slate-200 pl-9 pr-4 py-2 rounded-xl focus:outline-none focus:border-status-info placeholder-slate-500 transition-colors">
+    </div>
   </div>
 
-  <!-- Contenedor Maestro de la Tabla de Rendimiento -->
-  <div class="bg-brand-surface border border-brand-border rounded-2xl p-4 sm:p-6 shadow-sm">
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse text-sm">
+  <!-- CONTENEDOR INDUSTRIAL DE LA TABLA -->
+  <div class="bg-brand-surface border border-brand-border rounded-2xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto scrollbar-thin">
+      <table class="w-full text-left border-collapse text-xs">
         <thead>
-          <tr class="border-b border-brand-border text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            <th class="pb-3 font-semibold text-center w-16">Puesto</th>
-            <th class="pb-3 font-semibold">Producto / SKU</th>
-            <th class="pb-3 font-semibold hidden md:table-cell">Categoría</th>
-            <th class="pb-3 font-semibold w-40 sm:w-52">Volumen de Ventas</th>
-            <th class="pb-3 font-semibold text-center w-24">Unidades</th>
-            <th class="pb-3 font-semibold text-center w-28">Stock Almacén</th>
-            <th class="pb-3 font-semibold text-right w-32">Total Recaudado</th>
+          <tr class="border-b border-brand-border bg-brand-bg/40 text-slate-400 font-bold uppercase tracking-wider text-[10px] select-none">
+            <th class="py-3.5 pl-5 text-center w-16">Top</th>
+            <th class="py-3.5">Artículo / SKU</th>
+            <th class="py-3.5 w-1/3">Demanda vs Líder del Mercado</th>
+            <th class="py-3.5 text-center w-24">Unidades</th>
+            <th class="py-3.5 text-right pr-5 w-32">Recaudación</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-brand-border/30 text-slate-300">
+        <tbody class="divide-y divide-brand-border/40 text-slate-300">
           @for (prod of rankedProducts(); track prod.id; let idx = $index) {
-            <tr class="hover:bg-brand-hover/10 transition-colors duration-75">
+            <tr class="hover:bg-brand-bg/20 transition-colors align-middle">
               
-              <!-- Puesto / Podio Numérico -->
-              <td class="py-4 text-center font-mono font-black text-xs select-none">
-                <span class="inline-flex items-center justify-center w-7 h-7 rounded-xl border border-brand-border"
-                      [class.bg-status-warning/10]="idx === 0" [class.text-status-warning]="idx === 0" [class.border-status-warning/30]="idx === 0"
-                      [class.bg-slate-400/10]="idx === 1" [class.text-slate-300]="idx === 1"
-                      [class.bg-amber-700/10]="idx === 2" [class.text-amber-600]="idx === 2"
-                      [class.text-slate-500]="idx > 2">
-                  #{{ idx + 1 }}
+              <!-- Píldora del Puesto del Ranking -->
+              <td class="py-4 text-center pl-5 select-none">
+                <span [class.bg-status-success/10]="idx === 0" [class.text-status-success]="idx === 0" [class.border-status-success/30]="idx === 0"
+                      [class.bg-status-purple/10]="idx === 1" [class.text-status-purple]="idx === 1" [class.border-status-purple/30]="idx === 1"
+                      [class.bg-brand-bg]="idx > 1" [class.text-slate-400]="idx > 1" [class.border-brand-border/40]="idx > 1"
+                      class="inline-flex w-6 h-6 items-center justify-center font-mono font-black border rounded-lg text-xs">
+                  {{ idx + 1 }}
                 </span>
               </td>
 
-              <!-- Información con Foto del Producto -->
-              <td class="py-4 font-medium text-white max-w-xs pr-2">
+              <!-- Detalles del Producto -->
+              <td class="py-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-xl border border-brand-border bg-brand-bg flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+                  <div class="w-9 h-9 rounded-lg bg-brand-bg border border-brand-border/40 overflow-hidden flex items-center justify-center shrink-0">
                     @if (prod.imageUrl) {
-                      <img [src]="prod.imageUrl" [alt]="prod.name" class="w-full h-full object-cover" />
+                      <img [src]="prod.imageUrl" [alt]="prod.name" class="w-full h-full object-cover">
                     } @else {
-                      <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 7.5v9a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5v-9Z" /></svg>
+                      <svg class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 7.5v9a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5v-9Z" /></svg>
                     }
                   </div>
-                  <div class="truncate">
-                    <span class="block truncate font-semibold text-slate-200">{{ prod.name }}</span>
-                    <span class="block text-[10px] text-slate-500 font-mono mt-0.5">{{ prod.sku }}</span>
+                  <div class="min-w-0">
+                    <span class="block font-bold text-slate-100 truncate max-w-[180px] sm:max-w-[240px]">{{ prod.name }}</span>
+                    <span class="block text-[10px] text-slate-300 font-mono mt-0.5 uppercase tracking-wide">SKU: {{ prod.sku }} • {{ prod.category }}</span>
                   </div>
                 </div>
               </td>
 
-              <!-- Categoría -->
-              <td class="py-4 text-slate-400 text-xs hidden md:table-cell truncate max-w-[120px]">
-                {{ prod.category }}
-              </td>
-
-              <!-- Barra de Progreso de Tracción Ponderada -->
-              <td class="py-4 pr-3">
-                <div class="w-full h-2 bg-brand-bg rounded-full overflow-hidden border border-brand-border/40 relative">
-                  <div class="h-full rounded-full transition-all duration-500"
-                       [style.width.%]="(prod.unitsSold / maxUnitsSold()) * 100"
-                       [class.bg-status-success]="idx === 0"
-                       [class.bg-status-info]="idx > 0 && prod.unitsSold > 0"
-                       [class.bg-brand-border]="prod.unitsSold === 0">
+              <!-- 📊 BARRA DE AVANCE PROPORCIONAL: Compara el volumen vendido contra el primer lugar maxUnitsSold() -->
+              <td class="py-4 hidden sm:table-cell pr-4">
+                <div class="space-y-1 w-full">
+                  <div class="w-full h-1.5 bg-brand-bg rounded-full overflow-hidden border border-brand-border/40 p-[1px]">
+                    <div [style.width.%]="prod.unitsSold > 0 ? (prod.unitsSold / maxUnitsSold()) * 100 : 0"
+                         [class.bg-status-success]="idx === 0"
+                         [class.bg-status-purple]="idx === 1"
+                         [class.bg-status-info]="idx > 1"
+                         class="h-full rounded-full transition-all duration-500 ease-out">
+                    </div>
                   </div>
+                  <span class="block text-[9px] text-slate-300 font-mono text-left tracking-wide">Stock disponible en estantería: {{ prod.currentStock }} uds</span>
                 </div>
               </td>
 
-              <!-- Unidades Totales Vendidas -->
-              <td class="py-4 text-center font-bold font-mono text-xs"
-                  [class.text-status-success]="prod.unitsSold > 0"
-                  [class.text-slate-600]="prod.unitsSold === 0">
-                {{ prod.unitsSold }} uds
+              <!-- Cantidad Vendida -->
+              <td class="py-4 text-center font-mono font-bold text-slate-200">
+                <span class="px-2 py-0.5 bg-brand-bg rounded-md border border-brand-border/40 text-xs text-white">{{ prod.unitsSold }}</span>
               </td>
 
-              <!-- Stock Disponible Actual para decisiones de Compra -->
-              <td class="py-4 text-center">
-                <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-mono font-medium border"
-                      [class.text-status-danger]="prod.currentStock === 0" [class.border-status-danger/10]="prod.currentStock === 0" [class.bg-status-danger/5]="prod.currentStock === 0"
-                      [class.text-slate-400]="prod.currentStock > 0" [class.border-brand-border]="prod.currentStock > 0">
-                  Dispo: {{ prod.currentStock }}
-                </span>
-              </td>
-
-              <!-- Ingresos Monetarios Generados COP -->
-              <td class="py-4 text-right font-bold font-mono text-white tracking-tight tabular-nums">
+              <!-- Dinero Generado -->
+              <td class="py-4 text-right pr-5 font-mono font-black text-status-success">
                 {{ formatCurrency(prod.revenueGenerated) }}
               </td>
 
             </tr>
           } @empty {
             <tr>
-              <td colspan="7" class="py-12 text-center text-slate-500 text-sm">No se encontraron productos registrados en el sistema.</td>
+              <td colSpan="5" class="py-12 text-center text-slate-500 text-xs select-none">
+                No se registran datos transaccionales para procesar el ranking de rotación.
+              </td>
             </tr>
           }
         </tbody>

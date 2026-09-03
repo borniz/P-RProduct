@@ -1,8 +1,9 @@
-import { Component, inject, signal, computed, OnInit, effect } from '@angular/core'; // <-- Importado OnInit
+import { Component, inject, signal, computed, OnInit, effect } from '@angular/core';
 import { CASH_CLOSURE_REPOSITORY, CashClosure } from '../../data-access/cash-closure.repository';
 import { POS_REPOSITORY } from '../../../pos/data-acces/pos.repository';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { LoadingService } from '../../../../core/services/loading.service';
 
 @Component({
   selector: 'app-audit-panel',
@@ -10,7 +11,8 @@ import { AuthService } from '../../../../core/services/auth.service';
   imports: [RouterModule], // Control flow nativo en plantilla (@if, @for)
   templateUrl: './audit-panel.html',
 })
-export class AuditPanelComponent implements OnInit { 
+export class AuditPanelComponent implements OnInit {
+  private readonly loadingService = inject(LoadingService);
   private readonly authService = inject(AuthService);
   private readonly posRepo = inject(POS_REPOSITORY);
   private readonly closureRepo = inject(CASH_CLOSURE_REPOSITORY);
@@ -32,31 +34,40 @@ export class AuditPanelComponent implements OnInit {
     this.refreshFinancialData();
   }
 
-  // Ejecuta la recarga limpia invocando los cargadores de los repositorios inyectados
-  private refreshFinancialData(): void {
-  console.log('🔄 Refrescando balance fiscal de B&R Solutions desde Supabase...');
-  
-  // 1. Forzamos a los repositorios a ir a buscar los datos frescos a la nube
-  if (typeof (this.posRepo as any).load === 'function') {
-    (this.posRepo as any).load();
-  }
-  if (typeof (this.closureRepo as any).load === 'function') {
-    (this.closureRepo as any).load();
-  }
+  // 🔄 RECARGA DE RED: Despliega la barra de progreso elástica mientras refresca el balance fiscal
+  async refreshFinancialData(): Promise<void> {
+    console.log('🔄 Sincronizando balances contables desde Supabase...');
 
-  // 2. 🚀 TRUCO DE RE-RENDERIZADO TRANSACCIONAL
-  // Forzamos un micro-parpadeo en la señal del formulario de efectivo real.
-  // Esto obliga al motor reactivo de Angular a marcar el árbol de cómputos
-  // como "sucio" (dirty), forzando a que 'activeSales()', 'todaySales()'
-  // y 'todayTotals()' se redibujen con los datos nuevos sin dar F5.
-  const currentInput = this.realCashInput();
-  this.realCashInput.set(' '); 
-  
-  setTimeout(() => {
-    this.realCashInput.set(currentInput);
-  }, 50);
-}
+    // Enciende el overlay reutilizable centralizado
+    this.loadingService.show('Sincronizando balance fiscal con la base de datos remota...');
 
+    try {
+      // 1. Forzamos a los repositorios a ir a buscar los datos frescos a la nube
+      const promesas: Promise<void>[] = [];
+
+      if (typeof (this.posRepo as any).load === 'function') {
+        promesas.push((this.posRepo as any).load());
+      }
+      if (typeof (this.closureRepo as any).load === 'function') {
+        promesas.push((this.closureRepo as any).load());
+      }
+
+      if (promesas.length > 0) {
+        await Promise.all(promesas);
+      }
+
+      // 2. 🚀 TRUCO DE RE-RENDERIZADO TRANSACCIONAL
+      const currentInput = this.realCashInput();
+      this.realCashInput.set(' ');
+
+      setTimeout(() => {
+        this.realCashInput.set(currentInput);
+        this.loadingService.hide(); // Finaliza completando al 100% de forma fluida
+      }, 50);
+    } catch (error) {
+      this.loadingService.hide();
+    }
+  }
   // 📌 FILTRADO CONTABLE: Muestra únicamente las boletas que NO tienen un cierre asignado (Jornada Viva)
   readonly activeSales = computed(() => {
     return this.allSales().filter((s) => !s.cashClosureId);
@@ -110,35 +121,45 @@ export class AuditPanelComponent implements OnInit {
     this.isHistoryPanelOpen.set(true);
   }
 
-  // 🚀 CONSOLIDACIÓN MAESTRA DE JORNADA FISCAL
+  // 🚀 CONSOLIDACIÓN MAESTRA DE JORNADA FISCAL (ENGANCHADA AL LOADING SERVICE)
   async executeClosure(): Promise<void> {
     const calcs = this.closureCalculations();
     const salesIds = this.todaySales().map((s) => s.id); // Captura los folios activos
 
-    // Despacha la acción de forma directa
-    await this.closureRepo.saveClosure(
-      {
-        closureDate: new Date().toISOString().substring(0, 10),
-        salesCount: this.todaySales().length,
-        expectedCash: this.todayTotals().cash,
-        expectedCards: this.todayTotals().cards,
-        expectedTransfers: this.todayTotals().transfers,
-        totalExpected: this.todayTotals().total,
-        realCash: calcs.real,
-        diffAmount: calcs.diff,
-        status: calcs.status,
-        operator: this.authService.currentOperatorName(),
-      },
-      salesIds,
-    );
+    // Congela el lienzo del Arqueo con el modal de porcentaje real
+    this.loadingService.show('Firmando libro de arqueo contable y reseteando terminales POS...');
 
-    this.isClosureModalOpen.set(false);
-    this.realCashInput.set('');
-    
-    // Volvemos a refrescar los datos tras consolidar el cierre para vaciar la Jornada Abierta
-    this.refreshFinancialData();
-    
-    alert('Cierre de caja consolidado con éxito. Balance de jornada reiniciado a $0.');
+    try {
+      // Despacha la acción de persistencia en bloque hacia PostgreSQL
+      await this.closureRepo.saveClosure(
+        {
+          closureDate: new Date().toISOString().substring(0, 10),
+          salesCount: this.todaySales().length,
+          expectedCash: this.todayTotals().cash,
+          expectedCards: this.todayTotals().cards,
+          expectedTransfers: this.todayTotals().transfers,
+          totalExpected: this.todayTotals().total,
+          realCash: calcs.real,
+          diffAmount: calcs.diff,
+          status: calcs.status,
+          operator: this.authService.currentOperatorName(),
+        },
+        salesIds,
+      );
+
+      this.isClosureModalOpen.set(false);
+      this.realCashInput.set('');
+
+      // Volvemos a refrescar de forma asíncrona para vaciar la Jornada Abierta
+      await this.refreshFinancialData();
+
+      // Desmontamos la carga
+      this.loadingService.hide();
+      alert('Cierre de caja consolidado con éxito. Balance de jornada reiniciado a $0.');
+    } catch (err) {
+      this.loadingService.hide();
+      alert('Error crítico de red: No se pudo subir el libro contable de arqueo a Supabase.');
+    }
   }
 
   formatCurrency(val: number): string {
@@ -148,5 +169,4 @@ export class AuditPanelComponent implements OnInit {
       maximumFractionDigits: 0,
     }).format(val);
   }
-  
 }

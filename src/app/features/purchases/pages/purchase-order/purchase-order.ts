@@ -1,10 +1,11 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core'; // 📌 Importado OnInit
 import { PRODUCT_REPOSITORY } from '../../../products/data-access/product.repository';
 import { SUPPLIER_REPOSITORY } from '../../../suppliers/data-access/supplier.repository';
 import { PURCHASE_REPOSITORY } from '../../data-access/purchase.repository';
 import { STOCK_REPOSITORY } from '../../../inventory/stock/data-access/stock.repository';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { LoadingService } from '../../../../core/services/loading.service'; // 📌 SERVICIO GLOBAL INYECTADO
 import { Product } from '../../../products/models/product.model';
 import { PurchaseItem, PurchaseOrder } from '../../models/purchase.model';
 import { StockMovement } from '../../../inventory/stock/models/stock.model';
@@ -15,13 +16,15 @@ import { StockMovement } from '../../../inventory/stock/models/stock.model';
   imports: [], // Control flow nativo en plantilla (@if, @for)
   templateUrl: './purchase-order.html',
 })
-export class PurchaseOrderComponent {
+export class PurchaseOrderComponent implements OnInit {
+  // 📌 Implementada la interfaz OnInit
   private readonly productRepo = inject(PRODUCT_REPOSITORY);
   private readonly supplierRepo = inject(SUPPLIER_REPOSITORY);
   private readonly purchaseRepo = inject(PURCHASE_REPOSITORY);
   private readonly stockRepo = inject(STOCK_REPOSITORY);
   private readonly authService = inject(AuthService);
-  private readonly notificationService = inject(NotificationService); // 📌 CONECTADO AL MOTOR UNIFICADO
+  private readonly notificationService = inject(NotificationService);
+  private readonly loadingService = inject(LoadingService); // 📌 Inyección funcional de carga
 
   // Signals de Datos Remotos
   readonly products = this.productRepo.getProducts();
@@ -33,11 +36,44 @@ export class PurchaseOrderComponent {
   readonly purchaseCart = signal<PurchaseItem[]>([]);
   readonly errorMessage = signal<string>('');
 
-  // Controles Avanzados de UI y Carga
-  readonly isLoading = signal<boolean>(false);
+  // Controles Avanzados de UI y Facturación
+  readonly ordersInTransit = signal<{ [key: string]: boolean }>({});
   readonly customQuantities = signal<{ [key: string]: string }>({});
   readonly invoiceNumbers = signal<{ [key: string]: string }>({});
-  readonly ordersInTransit = signal<{ [key: string]: boolean }>({});
+
+  // 🚀 CARGA DE APERTURA: Sincroniza la bitácora con Supabase al ingresar a la vista
+  ngOnInit(): void {
+    this.syncPurchasesFromSupabase();
+  }
+
+  // 🔄 REFRESCAR RED: Despliega la barra de progreso elástica mientras descarga el histórico
+  async syncPurchasesFromSupabase(): Promise<void> {
+    console.log('🔄 Sincronizando órdenes de compra de B&R Solutions desde Supabase...');
+    this.loadingService.show('Descargando historial de lotes y proveedores remotos...');
+
+    try {
+      const promesas: Promise<void>[] = [];
+
+      if (this.purchaseRepo && 'loadOrders' in this.purchaseRepo) {
+        promesas.push((this.purchaseRepo as any).loadOrders());
+      } else if (this.purchaseRepo && 'load' in this.purchaseRepo) {
+        promesas.push((this.purchaseRepo as any).load());
+      }
+
+      if (this.supplierRepo && 'load' in this.supplierRepo) {
+        promesas.push((this.supplierRepo as any).load());
+      }
+
+      if (promesas.length > 0) {
+        await Promise.all(promesas);
+      }
+
+      this.loadingService.hide(); // 100% fluido al completar la red
+    } catch (error) {
+      console.error('Error al descargar bitácora logística:', error);
+      this.loadingService.hide();
+    }
+  }
 
   // Filtro inteligente de quiebres de inventario
   readonly criticalSuggestedProducts = computed(() => {
@@ -58,10 +94,6 @@ export class PurchaseOrderComponent {
     this.customQuantities.set({});
   }
 
-  markAsInTransit(orderId: string): void {
-    this.ordersInTransit.update((dict) => ({ ...dict, [orderId]: true }));
-  }
-  // 🕹️ ADICIÓN DE LOTES AJUSTABLES
   addSuggestedToOrder(product: Product, qty: number): void {
     if (qty <= 0 || isNaN(qty)) return;
     const currentCart = this.purchaseCart();
@@ -95,15 +127,20 @@ export class PurchaseOrderComponent {
     this.invoiceNumbers.update((dict) => ({ ...dict, [orderId]: input.value }));
   }
 
+  markAsInTransit(orderId: string): void {
+    this.ordersInTransit.update((dict) => ({ ...dict, [orderId]: true }));
+  }
+
   parseInt(val: string, radix: number): number {
     return parseInt(val, radix) || 0;
   }
 
-  // 🚀 EMISIÓN DE ORDEN ASÍNCRONA CON SLIDER OPTIMISTA
+  // 🚀 EMISIÓN DE ORDEN ASÍNCRONA CON PORCENTAJE REAL
   async placeOrder(): Promise<void> {
     if (this.purchaseCart().length === 0) return;
 
-    this.isLoading.set(true);
+    // Encendemos el overlay global reactivo unificado
+    this.loadingService.show('Despachando solicitud de reabastecimiento masivo a la nube...');
     const orderId = `OC-${crypto.randomUUID().substring(0, 5).toUpperCase()}`;
 
     const newOrder: PurchaseOrder = {
@@ -116,30 +153,33 @@ export class PurchaseOrderComponent {
       operator: this.authService.currentOperatorName(),
     };
 
-    // Retraso controlado estético de 1.2s para renderizar el loading slider corporativo
-    setTimeout(async () => {
-      try {
-        await this.purchaseRepo.createOrder(newOrder);
-        this.purchaseCart.set([]);
-        this.customQuantities.set({});
-        this.isLoading.set(false);
-        alert(`Orden de Compra ${orderId} registrada con éxito en Supabase.`);
-      } catch (err) {
-        this.errorMessage.set('Fallo de red al despachar la requisición.');
-        this.isLoading.set(false);
-      }
-    }, 1200);
+    try {
+      await this.purchaseRepo.createOrder(newOrder);
+
+      this.purchaseCart.set([]);
+      this.customQuantities.set({});
+      this.loadingService.hide(); // Cierre automático al 100%
+      alert(`Orden de Compra ${orderId} registrada con éxito en Supabase.`);
+    } catch (err) {
+      this.loadingService.hide();
+      this.errorMessage.set('Fallo de red al despachar la requisición.');
+    }
   }
 
-  // 🚀 ARRIBO FISCAL DE MERCANCÍA CON TIMBRADO EN LA CAMPANA DE NOTIFICACIONES
+  // 🚀 ARRIBO FISCAL DE BODEGA CON TIMBRADO DE NOTIFICACIONES AUTOMÁTICO
   async acceptIncomingDelivery(order: PurchaseOrder): Promise<void> {
-    try {
-      const billNumber = this.invoiceNumbers()[order.id]?.trim() || 'SIN-FACTURA';
+    const billNumber = this.invoiceNumbers()[order.id]?.trim() || 'SIN-FACTURA';
 
-      // 1. Firmamos la orden en estado 'Recibido' en Supabase
+    // Bloquea el canvas con el contador de avance de la base de datos
+    this.loadingService.show(
+      `Confirmando arribo físico del camión y cargando Kardex de OC #${order.id}...`,
+    );
+
+    try {
+      // 1. Firmamos la orden en estado 'Recibido'
       await this.purchaseRepo.receiveOrder(order.id);
 
-      // 2. Incrementamos las existencias en bloque en PostgreSQL y actualizamos el Kardex
+      // 2. Incrementamos existencias en bloque
       for (const item of order.items) {
         const targetProduct = this.products().find((p) => p.id === item.product.id);
         if (!targetProduct) continue;
@@ -164,24 +204,29 @@ export class PurchaseOrderComponent {
           date: new Date().toISOString().replace('T', ' ').substring(0, 16),
           operator: this.authService.currentOperatorName(),
         };
-
         await this.stockRepo.registerMovement(automatedIngreso);
       }
 
-      // 📌 3. ACOPLAMIENTO REQUERIDO: Empujamos el aviso al motor computado unificado del Header
+      // 3. Empujamos el aviso a la campana del Header
       this.notificationService.addNotification({
         title: 'Abastecimiento Exitoso',
-        message: `Lote de la Orden ${order.id} ingresado bajo Factura: ${billNumber}. Kardex actualizado.`,
+        message: `Lote de la Orden ${order.id} ingresado bajo Factura: ${billNumber}. Almacén actualizado.`,
         type: 'info',
         timeLabel: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
       });
 
+      // 4. Forzamos recarga limpia del catálogo
       if (this.productRepo && 'loadProductsFromSupabase' in this.productRepo) {
         await (this.productRepo as any).loadProductsFromSupabase();
       }
 
+      // Sincronizamos la bitácora local
+      await this.syncPurchasesFromSupabase();
+
+      this.loadingService.hide();
       alert(`Lote de la Orden ${order.id} consolidado correctamente.`);
     } catch (err) {
+      this.loadingService.hide();
       this.errorMessage.set('Error crítico al procesar el ingreso físico del camión.');
     }
   }

@@ -15,6 +15,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { BarcodeFormat } from '@zxing/library';
 import { SettingsService } from '../../../../core/services/settings.service';
+import { LoadingService } from '../../../../core/services/loading.service';
 
 @Component({
   selector: 'app-pos-terminal',
@@ -24,6 +25,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
   templateUrl: './pos-terminal.html',
 })
 export class PosTerminalComponent implements OnInit, OnDestroy {
+  private readonly loadingService = inject(LoadingService);
   private readonly authService = inject(AuthService);
   private readonly productRepo = inject(PRODUCT_REPOSITORY);
   private readonly posRepo = inject(POS_REPOSITORY);
@@ -239,56 +241,42 @@ readonly cartTotal = computed(() => this.cartSubtotal() + this.cartTax());
   async checkout(): Promise<void> {
     if (this.cart().length === 0) return;
 
+    // 🚀 ENCIENDE EL OVERLAY DE PORCENTAJE REAL DE B&R SOLUTIONS
+    this.loadingService.show('Procesando venta y emitiendo boleta contable...');
+
     try {
-      const apiPaymentMethod: 'Efectivo' | 'Tarjetas' | 'Transferencia' =
-        this.selectedPayment() === 'Debito' || this.selectedPayment() === 'Credito'
-          ? 'Tarjetas'
-          : (this.selectedPayment() as 'Efectivo' | 'Transferencia');
+      const apiPaymentMethod = this.selectedPayment() === 'Debito' || this.selectedPayment() === 'Credito'
+        ? 'Tarjetas' : (this.selectedPayment() as 'Efectivo' | 'Transferencia');
 
       const saleId = `POS-${crypto.randomUUID().substring(0, 5).toUpperCase()}`;
-
       const invoice: SaleInvoice = {
-        id: saleId,
-        items: this.cart(),
-        subtotal: this.cartSubtotal(),
-        tax: this.cartTax(),
-        total: this.cartTotal(),
-        paymentMethod: apiPaymentMethod,
-        createdAt: new Date().toISOString(),
-        operator: this.authService.currentOperatorName(),
+        id: saleId, items: this.cart(), subtotal: this.cartSubtotal(),
+        tax: this.cartTax(), total: this.cartTotal(), paymentMethod: apiPaymentMethod,
+        createdAt: new Date().toISOString(), operator: this.authService.currentOperatorName(),
         cashClosureId: undefined,
       };
 
+      // 1. Guardar boleta principal
       await this.posRepo.processSale(invoice);
 
+      // 2. Despacho masivo y Kardex en paralelo
       const promesasDeInventario: Promise<void>[] = [];
-
       for (const item of this.cart()) {
         const nextStock = item.product.stock - item.quantity;
         let nextStatus: 'Óptimo' | 'Bajo' | 'Crítico' = 'Óptimo';
-        const threshold = item.product.minStock * 0.1;
+        if (nextStock <= (item.product.minStock * 0.1)) nextStatus = 'Crítico';
+        else if (nextStock < item.product.minStock) nextStatus = 'Bajo';
 
-        if (nextStock <= threshold) {
-          nextStatus = 'Crítico';
-        } else if (nextStock < item.product.minStock) {
-          nextStatus = 'Bajo';
-        }
-
-        const pUpdate = this.productRepo.updateProduct({
-          ...item.product,
-          stock: nextStock,
-          status: nextStatus,
-        });
-        promesasDeInventario.push(pUpdate as any);
+        promesasDeInventario.push(this.productRepo.updateProduct({
+          ...item.product, stock: nextStock, status: nextStatus
+        }) as any);
 
         const automatedMovement: StockMovement = {
           id: `MOV-${crypto.randomUUID().substring(0, 5).toUpperCase()}`,
-          productName: item.product.name,
-          type: 'Egreso',
-          quantity: -item.quantity,
+          productName: item.product.name, type: 'Egreso', quantity: -item.quantity,
           reason: `Despacho automático por Venta POS en Boleta de Venta #${saleId}`,
           date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          operator: invoice.operator,
+          operator: invoice.operator
         };
 
         if (typeof (this.stockRepo as any).addMovement === 'function') {
@@ -300,10 +288,14 @@ readonly cartTotal = computed(() => this.cartSubtotal() + this.cartTax());
 
       await Promise.all(promesasDeInventario);
 
+      // 🏁 FINALIZA LA LECTURA FLUIDA COMPLETANDO LA BARRA AL 100%
+      this.loadingService.hide();
       this.clearCart();
       alert(`¡Venta procesada con éxito! Transacción: ${invoice.id}`);
+
     } catch (err) {
-      this.errorMessage.set('Error en el servidor central al procesar la venta. Inténtalo de nuevo.');
+      this.loadingService.hide(); // Apaga el modal en caso de error de red
+      this.errorMessage.set('Error en el servidor central al procesar la venta.');
     }
   }
 
