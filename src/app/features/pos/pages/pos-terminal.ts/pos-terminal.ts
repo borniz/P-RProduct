@@ -243,7 +243,6 @@ readonly cartTotal = computed(() => this.cartSubtotal() + this.cartTax());
 
     // 🚀 ENCIENDE EL OVERLAY DE PORCENTAJE REAL DE B&R SOLUTIONS
     this.loadingService.show('Procesando venta y emitiendo boleta contable...');
-    alert("se encendio el loading")
     try {
       const apiPaymentMethod = this.selectedPayment() === 'Debito' || this.selectedPayment() === 'Credito'
         ? 'Tarjetas' : (this.selectedPayment() as 'Efectivo' | 'Transferencia');
@@ -291,7 +290,7 @@ readonly cartTotal = computed(() => this.cartSubtotal() + this.cartTax());
       // 🏁 FINALIZA LA LECTURA FLUIDA COMPLETANDO LA BARRA AL 100%
       this.loadingService.hide();
       this.clearCart();
-      alert(`¡Venta procesada  éxito! Transacción: ${invoice.id}`);
+      alert(`¡Venta procesada con éxito! Transacción: ${invoice.id}`);
 
     } catch (err) {
       this.loadingService.hide(); // Apaga el modal en caso de error de red
