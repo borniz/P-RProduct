@@ -4,7 +4,6 @@ import { SaleInvoice } from '../models/pos.models';
 export interface PosRepository {
   processSale(invoice: SaleInvoice): Promise<void>;
   getSales(): Signal<SaleInvoice[]>; // 📌 NUEVO MÉTODO DE LECTURA REACTIVA
-  sendInvoiceToEmail(invoiceId: string, email: string): Promise<void>;
-}
+sendInvoiceToEmail(email: string, invoice: SaleInvoice): Promise<void>;}
 
 export const POS_REPOSITORY = new InjectionToken<PosRepository>('PosRepository');

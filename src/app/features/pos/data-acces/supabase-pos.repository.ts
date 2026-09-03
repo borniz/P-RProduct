@@ -89,19 +89,17 @@ export class SupabasePosRepository implements PosRepository {
     // Volvemos a gatillar la recarga limpia para actualizar los balances contables en caliente
     await this.load();
   }
-  async sendInvoiceToEmail(invoiceId: string, email: string): Promise<void> {
-    console.log(`📡 Invocando Edge Function para enviar OC/Factura ${invoiceId} a: ${email}`);
-    
+  async sendInvoiceToEmail(email: string, invoice: SaleInvoice): Promise<void> {
     const { data, error } = await this.supabase.functions.invoke('send-digital-invoice', {
       body: { 
-        invoiceId: invoiceId, 
-        targetEmail: email 
+        email: email, 
+        invoice: invoice 
       }
     });
 
     if (error) {
-      console.error('❌ Falló el despacho en la Edge Function de Supabase:', error.message);
-      throw new Error('No se pudo procesar el correo electrónico real.');
+      console.error('❌ Error en el puente de la Edge Function:', error.message);
+      throw error;
     }
   }
 }

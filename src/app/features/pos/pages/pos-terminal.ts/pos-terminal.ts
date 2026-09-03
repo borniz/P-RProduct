@@ -307,8 +307,10 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
 
       // 📬 INTEGRACIÓN MAESTRA DE FACTURA ELECTRÓNICA POR EMAIL
       if (this.requireDigitalInvoice() && this.clientEmail().includes('@') && typeof (this.posRepo as any).sendInvoiceToEmail === 'function') {
-        await (this.posRepo as any).sendInvoiceToEmail(invoice.id, this.clientEmail());
-        console.log(`✉️ Factura electrónica despachada al servidor de correo para: ${this.clientEmail()}`);
+        
+        // Embalamos el payload adaptado exactamente al contrato que lee tu Edge Function (email, invoice)
+        await (this.posRepo as any).sendInvoiceToEmail(this.clientEmail(), invoice);
+        console.log(`✉️ Factura electrónica enviada al servidor para: ${this.clientEmail()}`);
       }
 
       // 🏁 FINALIZA LA LECTURA FLUIDA COMPLETANDO LA BARRA AL 100%
