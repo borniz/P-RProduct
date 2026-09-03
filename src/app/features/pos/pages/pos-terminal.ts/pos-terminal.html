@@ -2,11 +2,17 @@
   <!-- Encabezado del Punto de Venta Responsivo -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div>
-      <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Terminal de Ventas POS</h1>
-      <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Facturación inmediata, caja registradora y despacho de mostrador</p>
+      <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">
+        Terminal de Ventas POS
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
+        Facturación inmediata, caja registradora y despacho de mostrador
+      </p>
     </div>
     @if (errorMessage()) {
-      <div class="p-3 bg-status-danger/10 border border-status-danger/20 rounded-xl text-xs font-semibold text-status-danger animate-fade-in max-w-full sm:max-w-sm shrink-0">
+      <div
+        class="p-3 bg-status-danger/10 border border-status-danger/20 rounded-xl text-xs font-semibold text-status-danger animate-fade-in max-w-full sm:max-w-sm shrink-0"
+      >
         {{ errorMessage() }}
       </div>
     }
@@ -14,148 +20,284 @@
 
   <!-- GRILLA PRINCIPAL ADAPTABLE: 1 columna en móviles, 12 columnas en escritorio (lg) -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-    
     <!-- COLUMNA IZQUIERDA: BUSCADOR, ESCÁNER DE CÁMARA Y CATÁLOGO TÁCTIL (OCUPA 7 COLUMNAS EN PC) -->
     <div class="lg:col-span-7 space-y-4 w-full min-w-0">
-      
       <!-- Buscador de Artículos + Botón Gatillo de Cámara Táctil -->
-      <div class="flex items-center gap-2 p-2.5 sm:p-3 bg-brand-surface border border-brand-border/60 rounded-2xl shadow-xs">
+      <div
+        class="flex items-center gap-2 p-2.5 sm:p-3 bg-brand-surface border border-brand-border/60 rounded-2xl shadow-xs"
+      >
         <div class="flex-1 relative">
-          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.603 10.603z" />
+          <span
+            class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.603 10.603z"
+              />
             </svg>
           </span>
-          <input (input)="updateSearch($event)"
-                 [value]="searchQuery()"
-                 type="text"
-                 placeholder="Busca por nombre o SKU..."
-                 class="w-full bg-brand-bg border border-brand-border text-xs sm:text-sm text-slate-200 pl-9 pr-4 py-2 rounded-xl focus:outline-none focus:border-status-info placeholder-slate-500 transition-colors" />
+          <input
+            (input)="updateSearch($event)"
+            [value]="searchQuery()"
+            type="text"
+            placeholder="Busca por nombre o SKU..."
+            class="w-full bg-brand-bg border border-brand-border text-xs sm:text-sm text-slate-200 pl-9 pr-4 py-2 rounded-xl focus:outline-none focus:border-status-info placeholder-slate-500 transition-colors"
+          />
         </div>
 
         <!-- Botón de Escáner Óptico de Cámara (Mobile-First) -->
-        <button (click)="toggleCameraScanner()"
-                type="button"
-                [class.bg-status-info/20]="isScannerActive()" [class.text-status-info]="isScannerActive()" [class.border-status-info/40]="isScannerActive()"
-                [class.bg-brand-bg]="!isScannerActive()" [class.border-brand-border]="!isScannerActive()"
-                class="p-2 sm:p-2.5 rounded-xl border text-slate-400 hover:text-white transition-all cursor-pointer group shrink-0"
-                title="Escanear código de barras">
-          <svg class="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-105 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5zM16.875 15.187h1.5m-1.5 2.25h1.5m-11.25-3h1.5m-1.5 2.25h1.5m10.5-11.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm-2.25-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm-2.25 4.5h.008v.008h-.008v-.008zm2.25 2.25h.008v.008h-.008v-.008zm-2.25 2.25h.008v.008h-.008v-.008zm-2.25-2.25h.008v.008h-.008v-.008zm-2.25-2.25h.008v.008h-.008v-.008zm0 4.5h.008v.008h-.008v-.008z" />
+        <button
+          (click)="toggleCameraScanner()"
+          type="button"
+          [class.bg-status-info/20]="isScannerActive()"
+          [class.text-status-info]="isScannerActive()"
+          [class.border-status-info/40]="isScannerActive()"
+          [class.bg-brand-bg]="!isScannerActive()"
+          [class.border-brand-border]="!isScannerActive()"
+          class="p-2 sm:p-2.5 rounded-xl border text-slate-400 hover:text-white transition-all cursor-pointer group shrink-0"
+          title="Escanear código de barras"
+        >
+          <svg
+            class="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-105 transition-transform"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5zM16.875 15.187h1.5m-1.5 2.25h1.5m-11.25-3h1.5m-1.5 2.25h1.5m10.5-11.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm-2.25-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm-2.25 4.5h.008v.008h-.008v-.008zm2.25 2.25h.008v.008h-.008v-.008zm-2.25 2.25h.008v.008h-.008v-.008zm-2.25-2.25h.008v.008h-.008v-.008zm-2.25-2.25h.008v.008h-.008v-.008zm0 4.5h.008v.008h-.008v-.008z"
+            />
           </svg>
         </button>
       </div>
 
       <!-- VISOR EN VIVO DE ESCÁNER DE CÁMARA RESPONSIVO ELÁSTICO -->
       @if (isScannerActive()) {
-        <div class="w-full bg-slate-950 border-2 border-status-info/30 rounded-2xl overflow-hidden relative shadow-inner animate-fade-in aspect-video max-h-56 sm:max-h-64 flex items-center justify-center">
-          <zxing-scanner [formats]="allowedFormats"
-                         (scanSuccess)="onBarcodeScanSuccess($any($event))"
-                         class="w-full h-full object-cover">
+        <div
+          class="w-full bg-slate-950 border-2 border-status-info/30 rounded-2xl overflow-hidden relative shadow-inner animate-fade-in aspect-video max-h-56 sm:max-h-64 flex items-center justify-center"
+        >
+          <zxing-scanner
+            [formats]="allowedFormats"
+            (scanSuccess)="onBarcodeScanSuccess($any($event))"
+            class="w-full h-full object-cover"
+          >
           </zxing-scanner>
-          <div class="absolute inset-x-0 h-0.5 bg-status-info shadow-[0_0_10px_#0284c7] animate-pulse top-1/2"></div>
-          <span class="absolute bottom-3 px-3 py-1 bg-slate-900/80 backdrop-blur-xs text-[10px] text-slate-300 font-medium rounded-lg border border-white/5 select-none text-center">
+          <div
+            class="absolute inset-x-0 h-0.5 bg-status-info shadow-[0_0_10px_#0284c7] animate-pulse top-1/2"
+          ></div>
+          <span
+            class="absolute bottom-3 px-3 py-1 bg-slate-900/80 backdrop-blur-xs text-[10px] text-slate-300 font-medium rounded-lg border border-white/5 select-none text-center"
+          >
             Enfoca el código de barras del producto
           </span>
         </div>
       }
 
       <!-- Matriz de Tarjetas Táctiles Adaptable: 2 columnas en móvil chico, 3 en tablets/PC -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 max-h-[22rem] lg:max-h-[calc(100vh-20rem)] overflow-y-auto pr-1 scrollbar-thin w-full">
+      <div
+        class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 max-h-[22rem] lg:max-h-[calc(100vh-20rem)] overflow-y-auto pr-1 scrollbar-thin w-full"
+      >
         @for (prod of filteredProducts(); track prod.id) {
-          <div (click)="addToCart(prod)"
-               class="bg-brand-surface border border-brand-border/60 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between hover:border-status-info/40 lg:hover:scale-[1.01] transition-all cursor-pointer group shadow-xs select-none">
-            
-            <div class="w-full aspect-square rounded-xl bg-brand-bg border border-brand-border/40 flex items-center justify-center overflow-hidden mb-2 sm:mb-2.5 relative">
+          <div
+            (click)="addToCart(prod)"
+            class="bg-brand-surface border border-brand-border/60 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between hover:border-status-info/40 lg:hover:scale-[1.01] transition-all cursor-pointer group shadow-xs select-none"
+          >
+            <div
+              class="w-full aspect-square rounded-xl bg-brand-bg border border-brand-border/40 flex items-center justify-center overflow-hidden mb-2 sm:mb-2.5 relative"
+            >
               @if (prod.imageurl) {
-                <img [src]="prod.imageurl" [alt]="prod.name" loading="lazy" decoding="async" class="w-full h-full object-cover lg:group-hover:scale-105 transition-transform duration-300" />
+                <img
+                  [src]="prod.imageurl"
+                  [alt]="prod.name"
+                  loading="lazy"
+                  decoding="async"
+                  width="150"
+                  height="150"
+                  class="w-full h-full object-cover lg:group-hover:scale-105 transition-transform duration-300"
+                />
               } @else {
-                <svg class="w-6 h-6 sm:w-8 sm:h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 7.5v9a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5v-9Z" /></svg>
+                <svg
+                  class="w-6 h-6 sm:w-8 sm:h-8 text-slate-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21 7.5a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 7.5v9a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5v-9Z"
+                  />
+                </svg>
               }
-              <span [class.bg-status-success/20]="prod.status === 'Óptimo'" [class.text-status-success]="prod.status === 'Óptimo'"
-                    [class.bg-status-warning/20]="prod.status === 'Bajo'" [class.text-status-warning]="prod.status === 'Bajo'"
-                    [class.bg-status-danger/20]="prod.status === 'Crítico'" [class.text-status-danger]="prod.status === 'Crítico'"
-                    class="absolute bottom-1 sm:bottom-1.5 right-1 sm:right-1.5 px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-mono font-bold border border-white/5 backdrop-blur-xs">
+              <span
+                [class.bg-status-success/20]="prod.status === 'Óptimo'"
+                [class.text-status-success]="prod.status === 'Óptimo'"
+                [class.bg-status-warning/20]="prod.status === 'Bajo'"
+                [class.text-status-warning]="prod.status === 'Bajo'"
+                [class.bg-status-danger/20]="prod.status === 'Crítico'"
+                [class.text-status-danger]="prod.status === 'Crítico'"
+                class="absolute bottom-1 sm:bottom-1.5 right-1 sm:right-1.5 px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-mono font-bold border border-white/5 backdrop-blur-xs"
+              >
                 Stock: {{ prod.stock }}
               </span>
             </div>
 
             <div class="space-y-0.5 text-left">
-              <span class="block text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-wider truncate">{{ prod.category }}</span>
-              <span class="block font-semibold text-slate-200 text-xs truncate lg:group-hover:text-white transition-colors">{{ prod.name }}</span>
-              <span class="block font-bold text-status-success text-xs sm:text-sm tracking-tight pt-0.5">{{ formatVisual(prod.price) }}</span>
+              <span
+                class="block text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-wider truncate"
+                >{{ prod.category }}</span
+              >
+              <span
+                class="block font-semibold text-slate-200 text-xs truncate lg:group-hover:text-white transition-colors"
+                >{{ prod.name }}</span
+              >
+              <span
+                class="block font-bold text-status-success text-xs sm:text-sm tracking-tight pt-0.5"
+                >{{ formatVisual(prod.price) }}</span
+              >
             </div>
           </div>
         } @empty {
-          <div class="col-span-full py-12 text-center text-slate-500 text-xs bg-brand-surface border border-brand-border rounded-2xl select-none">
+          <div
+            class="col-span-full py-12 text-center text-slate-500 text-xs bg-brand-surface border border-brand-border rounded-2xl select-none"
+          >
             No se encontraron productos con existencias físicas.
           </div>
         }
       </div>
     </div>
     <!-- COLUMNA DERECHA: RESUMEN DE LA COMPRA Y CARRO DE COMPRAS (OCUPA 5 COLUMNAS EN PC) -->
-    <div class="lg:col-span-5 bg-brand-surface border border-brand-border/80 rounded-2xl p-3 sm:p-4 flex flex-col justify-between min-h-fit lg:min-h-[calc(100vh-15rem)] shadow-sm w-full min-w-0">
-      
+    <div
+      class="lg:col-span-5 bg-brand-surface border border-brand-border/80 rounded-2xl p-3 sm:p-4 flex flex-col justify-between min-h-fit lg:min-h-[calc(100vh-15rem)] shadow-sm w-full min-w-0"
+    >
       <div class="space-y-4 flex-1 flex flex-col">
         <!-- Cabecera del Carrito Responsiva -->
         <div class="flex items-center justify-between pb-2 border-b border-b-brand-border">
           <div class="flex items-center gap-2">
-            <h2 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">Canasta de Ventas</h2>
-            <span class="px-1.5 py-0.5 bg-brand-bg border border-brand-border rounded-md text-[9px] sm:text-[10px] font-mono text-slate-400 font-bold">{{ cart().length }} ítems</span>
+            <h2 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+              Canasta de Ventas
+            </h2>
+            <span
+              class="px-1.5 py-0.5 bg-brand-bg border border-brand-border rounded-md text-[9px] sm:text-[10px] font-mono text-slate-400 font-bold"
+              >{{ cart().length }} ítems</span
+            >
           </div>
           @if (cart().length > 0) {
-            <button (click)='clearCart()' type="button" class="text-[10px] sm:text-[11px] text-slate-500 hover:text-status-danger cursor-pointer transition-colors font-medium">Vaciar carro</button>
+            <button
+              (click)="clearCart()"
+              type="button"
+              class="text-[10px] sm:text-[11px] text-slate-500 hover:text-status-danger cursor-pointer transition-colors font-medium"
+            >
+              Vaciar carro
+            </button>
           }
         </div>
 
         <!-- Lista de Artículos Añadidos con Controles de Cantidad -->
-        <div class="space-y-2 flex-1 overflow-y-auto max-h-[14rem] lg:max-h-[calc(100vh-32rem)] pr-1 scrollbar-thin">
+        <div
+          class="space-y-2 flex-1 overflow-y-auto max-h-[14rem] lg:max-h-[calc(100vh-32rem)] pr-1 scrollbar-thin"
+        >
           @for (item of cart(); track item.product.id) {
-            <div class="p-2 sm:p-2.5 bg-brand-bg/60 border border-brand-border/40 rounded-xl flex items-center justify-between gap-2.5 text-xs animate-fade-in">
-              
+            <div
+              class="p-2 sm:p-2.5 bg-brand-bg/60 border border-brand-border/40 rounded-xl flex items-center justify-between gap-2.5 text-xs animate-fade-in"
+            >
               <div class="min-w-0 flex-1 text-left">
-                <span class="block font-semibold text-slate-200 truncate text-xs">{{ item.product.name }}</span>
+                <span class="block font-semibold text-slate-200 truncate text-xs">{{
+                  item.product.name
+                }}</span>
                 <span class="block text-[9px] sm:text-[10px] text-slate-500 mt-0.5 font-mono">
                   U: {{ formatVisual(item.product.price) }}
                 </span>
               </div>
-              
+
               <!-- Controles Interactivos de Cantidad Flexibles -->
-              <div class="flex items-center bg-brand-bg border border-brand-border rounded-lg p-0.5 shrink-0 select-none">
-                <button (click)="updateItemQuantity(item.product.id, item.quantity - 1)"
-                        [disabled]="item.quantity <= 1"
-                        type="button" 
-                        class="w-5 h-5 sm:w-6 sm:h-6 rounded-md hover:bg-brand-hover text-slate-400 hover:text-white disabled:opacity-30 flex items-center justify-center font-bold cursor-pointer transition-colors text-xs sm:text-sm">
+              <div
+                class="flex items-center bg-brand-bg border border-brand-border rounded-lg p-0.5 shrink-0 select-none"
+              >
+                <button
+                  (click)="updateItemQuantity(item.product.id, item.quantity - 1)"
+                  [disabled]="item.quantity <= 1"
+                  type="button"
+                  class="w-5 h-5 sm:w-6 sm:h-6 rounded-md hover:bg-brand-hover text-slate-400 hover:text-white disabled:opacity-30 flex items-center justify-center font-bold cursor-pointer transition-colors text-xs sm:text-sm"
+                >
                   -
                 </button>
-                <input (input)="onCartQuantityInput($event, item.product.id)"
-                       [value]="item.quantity"
-                       type="text" 
-                       inputmode="numeric" 
-                       class="w-6 sm:w-8 text-center bg-transparent text-white font-mono font-bold focus:outline-none text-xs" />
-                <button (click)="updateItemQuantity(item.product.id, item.quantity + 1)"
-                        [disabled]="item.quantity >= item.product.stock"
-                        type="button" 
-                        class="w-5 h-5 sm:w-6 sm:h-6 rounded-md hover:bg-brand-hover text-slate-400 hover:text-white disabled:opacity-30 flex items-center justify-center font-bold cursor-pointer transition-colors text-xs sm:text-sm">
+                <input
+                  (input)="onCartQuantityInput($event, item.product.id)"
+                  [value]="item.quantity"
+                  type="text"
+                  inputmode="numeric"
+                  class="w-6 sm:w-8 text-center bg-transparent text-white font-mono font-bold focus:outline-none text-xs"
+                />
+                <button
+                  (click)="updateItemQuantity(item.product.id, item.quantity + 1)"
+                  [disabled]="item.quantity >= item.product.stock"
+                  type="button"
+                  class="w-5 h-5 sm:w-6 sm:h-6 rounded-md hover:bg-brand-hover text-slate-400 hover:text-white disabled:opacity-30 flex items-center justify-center font-bold cursor-pointer transition-colors text-xs sm:text-sm"
+                >
                   +
                 </button>
               </div>
-              
+
               <!-- Subtotal y Botón Eliminar -->
               <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-                <span class="font-bold text-white font-mono min-w-[55px] sm:min-w-[65px] text-right text-xs">
+                <span
+                  class="font-bold text-white font-mono min-w-[55px] sm:min-w-[65px] text-right text-xs"
+                >
                   {{ formatVisual(item.subtotal) }}
                 </span>
-                <button (click)="removeFromCart(item.product.id)" type="button" class="text-slate-500 hover:text-status-danger p-1 rounded-lg hover:bg-brand-hover transition-colors cursor-pointer">
-                  <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                <button
+                  (click)="removeFromCart(item.product.id)"
+                  type="button"
+                  class="text-slate-500 hover:text-status-danger p-1 rounded-lg hover:bg-brand-hover transition-colors cursor-pointer"
+                >
+                  <svg
+                    class="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
                 </button>
               </div>
-
             </div>
           } @empty {
-            <div class="flex flex-col items-center justify-center h-36 sm:h-48 text-center text-slate-600 space-y-2 select-none">
-              <svg class="w-7 h-7 sm:w-8 sm:h-8 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.3h3.25m0 0a3 3 0 11-6 0h12.5m-14.25 0h14.25H4.5m14.25 0a3 3 0 11-6 0M17.5 9.45V5.5A1.5 1.5 0 0016 4H5m11.5 5.45a3 3 0 11-6 0m6 0a3 3 0 11-6 0m6 0H9" /></svg>
-              <p class="text-[11px] sm:text-xs">El carro de compras está vacío.<br>Presiona los productos para facturar.</p>
+            <div
+              class="flex flex-col items-center justify-center h-36 sm:h-48 text-center text-slate-600 space-y-2 select-none"
+            >
+              <svg
+                class="w-7 h-7 sm:w-8 sm:h-8 opacity-40"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.3h3.25m0 0a3 3 0 11-6 0h12.5m-14.25 0h14.25H4.5m14.25 0a3 3 0 11-6 0M17.5 9.45V5.5A1.5 1.5 0 0016 4H5m11.5 5.45a3 3 0 11-6 0m6 0a3 3 0 11-6 0m6 0H9"
+                />
+              </svg>
+              <p class="text-[11px] sm:text-xs">
+                El carro de compras está vacío.<br />Presiona los productos para facturar.
+              </p>
             </div>
           }
         </div>
@@ -163,34 +305,56 @@
 
       <!-- MEDIOS DE PAGO Y LIQUIDACIÓN FINANCIERA -->
       <div class="mt-4 pt-4 border-t border-brand-border space-y-4 bg-brand-surface w-full">
-        
         <!-- Píldoras de Selección de Medio de Pago -->
         <div class="space-y-1.5 text-left">
-          <label class="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider">Método de Pago</label>
+          <label
+            class="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider"
+            >Método de Pago</label
+          >
           <div class="grid grid-cols-3 gap-2">
-            <button (click)="updatePaymentMethod('Efectivo')"
-                    type="button"
-                    [class]="paymentMethod() === 'Efectivo' ? 'bg-status-success/15 border-status-success/50 text-status-success font-bold' : 'bg-brand-bg border-brand-border text-slate-400'"
-                    class="py-1.5 sm:py-2 text-[11px] sm:text-xs rounded-xl border font-medium transition-all cursor-pointer text-center">
+            <button
+              (click)="updatePaymentMethod('Efectivo')"
+              type="button"
+              [class]="
+                paymentMethod() === 'Efectivo'
+                  ? 'bg-status-success/15 border-status-success/50 text-status-success font-bold'
+                  : 'bg-brand-bg border-brand-border text-slate-400'
+              "
+              class="py-1.5 sm:py-2 text-[11px] sm:text-xs rounded-xl border font-medium transition-all cursor-pointer text-center"
+            >
               Efectivo
             </button>
-            <button (click)="updatePaymentMethod('Debito')"
-                    type="button"
-                    [class]="paymentMethod() === 'Debito' ? 'bg-status-info/15 border-status-info/50 text-status-info font-bold' : 'bg-brand-bg border-brand-border text-slate-400'"
-                    class="py-1.5 sm:py-2 text-[11px] sm:text-xs rounded-xl border font-medium transition-all cursor-pointer text-center">
+            <button
+              (click)="updatePaymentMethod('Debito')"
+              type="button"
+              [class]="
+                paymentMethod() === 'Debito'
+                  ? 'bg-status-info/15 border-status-info/50 text-status-info font-bold'
+                  : 'bg-brand-bg border-brand-border text-slate-400'
+              "
+              class="py-1.5 sm:py-2 text-[11px] sm:text-xs rounded-xl border font-medium transition-all cursor-pointer text-center"
+            >
               Débito
             </button>
-            <button (click)="updatePaymentMethod('Credito')"
-                    type="button"
-                    [class]="paymentMethod() === 'Credito' ? 'bg-brand-accent/15 border-brand-accent/50 text-brand-accent font-bold' : 'bg-brand-bg border-brand-border text-slate-400'"
-                    class="py-1.5 sm:py-2 text-[11px] sm:text-xs rounded-xl border font-medium transition-all cursor-pointer text-center">
+            <button
+              (click)="updatePaymentMethod('Credito')"
+              type="button"
+              [class]="
+                paymentMethod() === 'Credito'
+                  ? 'bg-brand-accent/15 border-brand-accent/50 text-brand-accent font-bold'
+                  : 'bg-brand-bg border-brand-border text-slate-400'
+              "
+              class="py-1.5 sm:py-2 text-[11px] sm:text-xs rounded-xl border font-medium transition-all cursor-pointer text-center"
+            >
               Crédito
             </button>
           </div>
         </div>
 
         <!-- Resumen de Liquidación de Totales -->
-        <div class="p-3 bg-brand-bg/50 border border-brand-border/60 rounded-xl space-y-1.5 font-mono text-[11px] sm:text-xs">
+        <div
+          class="p-3 bg-brand-bg/50 border border-brand-border/60 rounded-xl space-y-1.5 font-mono text-[11px] sm:text-xs"
+        >
           <div class="flex justify-between text-slate-400">
             <span>Subtotal Neto:</span>
             <span>{{ formatVisual(totalCart() * 0.81) }}</span>
@@ -199,21 +363,32 @@
             <span>IVA (19%):</span>
             <span>{{ formatVisual(totalCart() * 0.19) }}</span>
           </div>
-          <div class="flex justify-between text-white font-bold text-sm sm:text-base pt-1.5 border-t border-brand-border/40 font-sans">
+          <div
+            class="flex justify-between text-white font-bold text-sm sm:text-base pt-1.5 border-t border-brand-border/40 font-sans"
+          >
             <span>Total a Pagar:</span>
             <span class="text-status-success">{{ formatVisual(totalCart()) }}</span>
           </div>
         </div>
 
         <!-- Botón Principal Liquidar Venta -->
-        <button (click)="checkoutVenta()"
-                [disabled]="cart().length === 0"
-                type="button"
-                class="w-full py-2.5 sm:py-3 bg-status-success hover:bg-status-success/90 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+        <button
+          (click)="checkoutVenta()"
+          [disabled]="cart().length === 0"
+          type="button"
+          class="w-full py-2.5 sm:py-3 bg-status-success hover:bg-status-success/90 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2.5"
+            stroke="currentColor"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
           <span>Emitir Boleta / Despachar</span>
         </button>
-
       </div>
     </div>
   </div>
