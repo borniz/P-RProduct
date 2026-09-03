@@ -4,7 +4,7 @@ import { PosRepository } from './pos.repository';
 import { SaleInvoice } from '../models/pos.models';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SupabasePosRepository implements PosRepository {
   private readonly supabase = inject(SupabaseService).client;
@@ -24,19 +24,34 @@ export class SupabasePosRepository implements PosRepository {
     // Se fuerza el orden descendente usando la columna exacta 'created_at' de tu foto relacional
     const { data, error } = await this.supabase
       .from('sales_invoices')
-      .select('*')
-      .order('created_at', { ascending: false }); 
+      .select(
+        `
+    id,
+    subtotal,
+    tax,
+    total,
+    payment_method,
+    operator,
+    items_snapshot,
+    created_at,
+    cash_closure_id
+  `,
+      )
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (error) {
-      console.error('❌ Error de consulta en sales_invoices de Supabase:', error.message);
-      throw error;
+      console.error('❌ Error de consulta en sales_invoices:', error);
+      return;
     }
+
+    
 
     if (data) {
       // Hidratamos y mapeamos los esquemas snake_case de PostgreSQL hacia tus variables camelCase de TypeScript
       const mappedSales: SaleInvoice[] = data.map((r: any) => {
         let parsedItems: any[] = [];
-        
+
         // 📌 PARCHE DE COHESIÓN: Deserializa el bloque JSONB de Supabase de forma segura hacia la variable 'items'
         if (typeof r.items_snapshot === 'string') {
           try {
@@ -57,7 +72,7 @@ export class SupabasePosRepository implements PosRepository {
           operator: r.operator,
           items: parsedItems, // 🚀 SOLUCIÓN: Asigna el snapshot JSONB directamente a la propiedad obligatoria 'items'
           createdAt: r.created_at,
-          cashClosureId: r.cash_closure_id // Convierte cash_closure_id a cashClosureId
+          cashClosureId: r.cash_closure_id, // Convierte cash_closure_id a cashClosureId
         };
       });
 
@@ -67,9 +82,8 @@ export class SupabasePosRepository implements PosRepository {
 
   // 🚀 PROCESADOR DE CHECKOUT: Inserta la boleta en la base de datos central en la nube
   async processSale(invoice: SaleInvoice): Promise<void> {
-    const { error } = await this.supabase
-      .from('sales_invoices')
-      .insert([{
+    const { error } = await this.supabase.from('sales_invoices').insert([
+      {
         id: invoice.id,
         subtotal: invoice.subtotal,
         tax: invoice.tax,
@@ -77,9 +91,11 @@ export class SupabasePosRepository implements PosRepository {
         payment_method: invoice.paymentMethod, // Mapeado exacto a la base snake_case de tu foto
         operator: invoice.operator,
         // 🚀 SOLUCIÓN: Convierte o mapea el arreglo de 'items' de tu modelo hacia la columna 'items_snapshot' de Postgres
-        items_snapshot: typeof invoice.items === 'string' ? invoice.items : JSON.stringify(invoice.items),
-        cash_closure_id: invoice.cashClosureId // Mapeado exacto a la base snake_case de tu foto
-      }]);
+        items_snapshot:
+          typeof invoice.items === 'string' ? invoice.items : JSON.stringify(invoice.items),
+        cash_closure_id: invoice.cashClosureId, // Mapeado exacto a la base snake_case de tu foto
+      },
+    ]);
 
     if (error) {
       console.error('❌ Error al insertar boleta en Supabase:', error.message);
@@ -91,10 +107,10 @@ export class SupabasePosRepository implements PosRepository {
   }
   async sendInvoiceToEmail(email: string, invoice: SaleInvoice): Promise<void> {
     const { data, error } = await this.supabase.functions.invoke('send-digital-invoice', {
-      body: { 
-        targetEmail: email, 
-        invoice: invoice.id
-      }
+      body: {
+        targetEmail: email,
+        invoice: invoice.id,
+      },
     });
 
     if (error) {
