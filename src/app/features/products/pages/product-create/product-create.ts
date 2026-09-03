@@ -37,7 +37,7 @@ export class ProductCreate implements OnInit {
   readonly isScannerActive = signal<boolean>(false);
   readonly productId = signal<string | null>(null);
   readonly errorMessage = signal<string>('');
-
+  readonly isTorchActive = signal<boolean>(false);
   // Signals de Control para los Inputs del Formulario
   readonly name = signal<string>('');
   readonly sku = signal<string>('');
@@ -65,53 +65,79 @@ export class ProductCreate implements OnInit {
 
   // Metadatos semánticos de configuración polimórfica
   readonly categoryMetadata: ModuleMetadata = {
-    entityName: 'Categoría', pluralName: 'Categorías', subtitle: 'Parámetro rápido',
-    metricLabel: '', hasDescription: true, descriptionPlaceholder: 'Alcance...'
+    entityName: 'Categoría',
+    pluralName: 'Categorías',
+    subtitle: 'Parámetro rápido',
+    metricLabel: '',
+    hasDescription: true,
+    descriptionPlaceholder: 'Alcance...',
   };
   readonly brandMetadata: ModuleMetadata = {
-    entityName: 'Marca', pluralName: 'Marcas', subtitle: 'Parámetro rápido',
-    metricLabel: '', hasDescription: true, descriptionPlaceholder: 'Detalles...'
+    entityName: 'Marca',
+    pluralName: 'Marcas',
+    subtitle: 'Parámetro rápido',
+    metricLabel: '',
+    hasDescription: true,
+    descriptionPlaceholder: 'Detalles...',
   };
   readonly unitMetadata: ModuleMetadata = {
-    entityName: 'Unidad', pluralName: 'Unidades', subtitle: 'Parámetro rápido',
-    metricLabel: '', hasDescription: false, descriptionPlaceholder: ''
+    entityName: 'Unidad',
+    pluralName: 'Unidades',
+    subtitle: 'Parámetro rápido',
+    metricLabel: '',
+    hasDescription: false,
+    descriptionPlaceholder: '',
   };
   readonly supplierMetadata: ModuleMetadata = {
-    entityName: 'Proveedor', pluralName: 'Proveedores', subtitle: 'Parámetro rápido',
-    metricLabel: '', hasDescription: true, descriptionPlaceholder: 'Ej: Contacto corporativo, fletes o condiciones...'
+    entityName: 'Proveedor',
+    pluralName: 'Proveedores',
+    subtitle: 'Parámetro rápido',
+    metricLabel: '',
+    hasDescription: true,
+    descriptionPlaceholder: 'Ej: Contacto corporativo, fletes o condiciones...',
   };
 
   readonly allowedFormats = [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.CODE_128];
 
   readonly isEditMode = computed(() => this.productId() !== null);
-  readonly pageTitle = computed(() => this.isEditMode() ? 'Actualizar Producto' : 'Nuevo Producto');
-  readonly pageSubtitle = computed(() => this.isEditMode() 
-    ? 'Modifica las existencias o valores comerciales del artículo' 
-    : 'Registra un nuevo artículo en el catálogo maestro de B&R Solutions'
+  readonly pageTitle = computed(() =>
+    this.isEditMode() ? 'Actualizar Producto' : 'Nuevo Producto',
   );
-  readonly submitButtonText = computed(() => this.isEditMode() ? 'Guardar Cambios' : 'Registrar Artículo');
+  readonly pageSubtitle = computed(() =>
+    this.isEditMode()
+      ? 'Modifica las existencias o valores comerciales del artículo'
+      : 'Registra un nuevo artículo en el catálogo maestro de B&R Solutions',
+  );
+  readonly submitButtonText = computed(() =>
+    this.isEditMode() ? 'Guardar Cambios' : 'Registrar Artículo',
+  );
 
   ngOnInit(): void {
     if (this.categoriesList().length > 0) this.category.set(this.categoriesList()[0].name);
     if (this.brandsList().length > 0) this.brand.set(this.brandsList()[0].name);
     if (this.unitsList().length > 0) this.unit.set(this.unitsList()[0].name);
     if (this.suppliersList().length > 0) this.supplier.set(this.suppliersList()[0].name);
-    
+
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.productId.set(idParam);
       this.loadProductData(idParam);
     }
   }
+  toggleTorch(): void {
+    this.isTorchActive.update((current) => !current);
+  }
   toggleCameraScanner(): void {
-    this.isScannerActive.update(current => !current);
+    this.isScannerActive.update((current) => !current);
   }
 
   onBarcodeScanSuccess(scannedCode: any): void {
-    const codeString = String(scannedCode || '').trim().toUpperCase();
+    const codeString = String(scannedCode || '')
+      .trim()
+      .toUpperCase();
     if (!codeString) return;
 
-    this.sku.set(codeString); 
+    this.sku.set(codeString);
     this.isScannerActive.set(false);
     this.playScanBeep();
   }
@@ -202,12 +228,24 @@ export class ProductCreate implements OnInit {
     this.isSupplierModalOpen.set(false);
   }
 
-  onInputName(e: Event): void { this.name.set((e.target as HTMLInputElement).value); }
-  onInputSku(e: Event): void { this.sku.set((e.target as HTMLInputElement).value); }
-  onInputStock(e: Event): void { this.handleNumericInput(e, this.stock); }
-  onInputMinStock(e: Event): void { this.handleNumericInput(e, this.minStock); }
-  onInputBuyPrice(e: Event): void { this.handleNumericInput(e, this.buyPrice); }
-  onInputUnitPrice(e: Event): void { this.handleNumericInput(e, this.unitPrice); }
+  onInputName(e: Event): void {
+    this.name.set((e.target as HTMLInputElement).value);
+  }
+  onInputSku(e: Event): void {
+    this.sku.set((e.target as HTMLInputElement).value);
+  }
+  onInputStock(e: Event): void {
+    this.handleNumericInput(e, this.stock);
+  }
+  onInputMinStock(e: Event): void {
+    this.handleNumericInput(e, this.minStock);
+  }
+  onInputBuyPrice(e: Event): void {
+    this.handleNumericInput(e, this.buyPrice);
+  }
+  onInputUnitPrice(e: Event): void {
+    this.handleNumericInput(e, this.unitPrice);
+  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -222,7 +260,9 @@ export class ProductCreate implements OnInit {
     reader.readAsDataURL(file);
   }
 
-  removeImage(): void { this.imagePreview.set(null); }
+  removeImage(): void {
+    this.imagePreview.set(null);
+  }
 
   formatVisual(value: string | number | null | undefined): string {
     if (value === null || value === undefined || value === '') return '';
@@ -266,12 +306,18 @@ export class ProductCreate implements OnInit {
       minStock: numericMinStock,
       status: computedStatus,
       buyprice: this.buyPrice(),
-      price: this.unitPrice().startsWith('$') ? this.unitPrice().trim() : `$ ${this.unitPrice().trim()}`,
+      price: this.unitPrice().startsWith('$')
+        ? this.unitPrice().trim()
+        : `$ ${this.unitPrice().trim()}`,
       imageurl: this.imagePreview() || undefined,
     };
 
     // ⚡ Encendemos el overlay reutilizable calculando el progreso lineal al vuelo
-    this.loadingService.show(this.isEditMode() ? 'Actualizando datos del artículo...' : 'Registrando nuevo producto en Supabase...');
+    this.loadingService.show(
+      this.isEditMode()
+        ? 'Actualizando datos del artículo...'
+        : 'Registrando nuevo producto en Supabase...',
+    );
 
     try {
       if (this.isEditMode()) {
@@ -279,7 +325,7 @@ export class ProductCreate implements OnInit {
       } else {
         await this.productService.addProduct(productPayload);
       }
-      
+
       // 🏁 Desmontamos el overlay completando la barra al 100% de forma fluida
       this.loadingService.hide();
       this.router.navigate(['/products']);
