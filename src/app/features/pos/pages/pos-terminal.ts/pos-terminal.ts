@@ -243,7 +243,7 @@ readonly cartTotal = computed(() => this.cartSubtotal() + this.cartTax());
 
     // 🚀 ENCIENDE EL OVERLAY DE PORCENTAJE REAL DE B&R SOLUTIONS
     this.loadingService.show('Procesando venta y emitiendo boleta contable...');
-
+    alert("se encendio el loading")
     try {
       const apiPaymentMethod = this.selectedPayment() === 'Debito' || this.selectedPayment() === 'Credito'
         ? 'Tarjetas' : (this.selectedPayment() as 'Efectivo' | 'Transferencia');
