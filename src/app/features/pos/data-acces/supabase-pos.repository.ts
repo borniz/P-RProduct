@@ -82,27 +82,35 @@ export class SupabasePosRepository implements PosRepository {
 
   // 🚀 PROCESADOR DE CHECKOUT: Inserta la boleta en la base de datos central en la nube
   async processSale(invoice: SaleInvoice): Promise<void> {
-    const { error } = await this.supabase.from('sales_invoices').insert([
-      {
+    
+    // 📌 FILTRO DE INGENIERÍA: Sanitizamos el snapshot removiendo Base64 para que PostgreSQL nunca sufra un Timeout
+    const sanitizedItems = invoice.items.map((item: any) => ({
+      ...item,
+      product: {
+        ...item.product,
+        imageurl: item.product.imageurl?.startsWith('data:') ? 'IMAGEN-LOCAL-REMOVIDA-POR-SEGURIDAD' : item.product.imageurl
+      }
+    }));
+
+    const { error } = await this.supabase
+      .from('sales_invoices')
+      .insert([{
         id: invoice.id,
         subtotal: invoice.subtotal,
         tax: invoice.tax,
         total: invoice.total,
-        payment_method: invoice.paymentMethod, // Mapeado exacto a la base snake_case de tu foto
+        payment_method: invoice.paymentMethod,
         operator: invoice.operator,
-        // 🚀 SOLUCIÓN: Convierte o mapea el arreglo de 'items' de tu modelo hacia la columna 'items_snapshot' de Postgres
-        items_snapshot:
-          typeof invoice.items === 'string' ? invoice.items : JSON.stringify(invoice.items),
-        cash_closure_id: invoice.cashClosureId, // Mapeado exacto a la base snake_case de tu foto
-      },
-    ]);
+        // Guardamos el arreglo purificado libre de megabytes de texto
+        items_snapshot: JSON.stringify(sanitizedItems),
+        cash_closure_id: invoice.cashClosureId
+      }]);
 
     if (error) {
       console.error('❌ Error al insertar boleta en Supabase:', error.message);
       throw error;
     }
 
-    // Volvemos a gatillar la recarga limpia para actualizar los balances contables en caliente
     await this.load();
   }
   async sendInvoiceToEmail(email: string, invoice: SaleInvoice): Promise<void> {
