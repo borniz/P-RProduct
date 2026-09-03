@@ -59,13 +59,14 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
 
   // 🔍 Filtro en tiempo real para el buscador predictivo por Nombre o SKU
   readonly filteredProducts = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    return this.products().filter(
-      (p) =>
-        (p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query)) &&
-        p.stock > 0,
-    );
-  });
+  const query = this.searchQuery().toLowerCase().trim();
+  const all = this.products().filter(p => p.stock > 0);
+  
+  if (!query) {
+    return all.slice(0, 15); // 🚀 Solo pinta las primeras 15 herramientas para acelerar el LCP a milisegundos
+  }
+  return all.filter(p => p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query));
+});
 
   // 📊 Totales Financieros Computados Reactivamente
   readonly cartSubtotal = computed(() => {

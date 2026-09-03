@@ -68,7 +68,7 @@
             
             <div class="w-full aspect-square rounded-xl bg-brand-bg border border-brand-border/40 flex items-center justify-center overflow-hidden mb-2 sm:mb-2.5 relative">
               @if (prod.imageurl) {
-                <img [src]="prod.imageurl" [alt]="prod.name" class="w-full h-full object-cover lg:group-hover:scale-105 transition-transform duration-300" />
+                <img [src]="prod.imageurl" [alt]="prod.name" loading="lazy" decoding="async" class="w-full h-full object-cover lg:group-hover:scale-105 transition-transform duration-300" />
               } @else {
                 <svg class="w-6 h-6 sm:w-8 sm:h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 7.5v9a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5v-9Z" /></svg>
               }
