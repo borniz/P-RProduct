@@ -83,28 +83,23 @@
 
       <!-- VISOR EN VIVO DE ESCÁNER DE CÁMARA RESPONSIVO ELÁSTICO -->
       @if (isScannerActive()) {
-        <div
-          class="w-full bg-slate-950 border-2 border-status-info/30 rounded-2xl overflow-hidden relative shadow-inner animate-fade-in aspect-video max-h-56 sm:max-h-64 flex items-center justify-center"
-        >
-          <zxing-scanner
-            [formats]="allowedFormats"
-            (scanSuccess)="onBarcodeScanSuccess($any($event))"
-            class="w-full h-full object-cover"
-          >
-          </zxing-scanner>
-          <div
-            class="absolute inset-x-0 h-0.5 bg-status-info shadow-[0_0_10px_#0284c7] animate-pulse top-1/2"
-          ></div>
-          <span
-            class="absolute bottom-3 px-3 py-1 bg-slate-900/80 backdrop-blur-xs text-[10px] text-slate-300 font-medium rounded-lg border border-white/5 select-none text-center"
-          >
-            Enfoca el código de barras del producto
-          </span>
-        </div>
+        @defer (when isScannerActive()) {
+          <div class="w-full bg-slate-950 border-2 border-status-info/30 rounded-2xl overflow-hidden relative shadow-inner animate-fade-in aspect-video max-h-56 sm:max-h-64 flex items-center justify-center">
+            <zxing-scanner [formats]="allowedFormats"
+                           (scanSuccess)="onBarcodeScanSuccess($any($event))"
+                           class="w-full h-full object-cover">
+            </zxing-scanner>
+            <div class="absolute inset-x-0 h-0.5 bg-status-info shadow-[0_0_10px_#0284c7] animate-pulse top-1/2"></div>
+          </div>
+        } @loading {
+          <div class="w-full h-48 bg-slate-900 animate-pulse rounded-2xl flex items-center justify-center text-xs text-slate-500">
+            Cargando hardware óptico...
+          </div>
+        }
       }
 
       <!-- Matriz de Tarjetas Táctiles Adaptable: 2 columnas en móvil chico, 3 en tablets/PC -->
-      <div
+      <div style="content-visibility: auto;"
         class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 max-h-[22rem] lg:max-h-[calc(100vh-20rem)] overflow-y-auto pr-1 scrollbar-thin w-full"
       >
         @for (prod of filteredProducts(); track prod.id) {
