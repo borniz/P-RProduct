@@ -310,7 +310,6 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
         
         // Embalamos el payload adaptado exactamente al contrato que lee tu Edge Function (email, invoice)
         await (this.posRepo as any).sendInvoiceToEmail(this.clientEmail(), invoice);
-        console.log(`✉️ Factura electrónica enviada al servidor para: ${this.clientEmail()}`);
       }
 
       // 🏁 FINALIZA LA LECTURA FLUIDA COMPLETANDO LA BARRA AL 100%
