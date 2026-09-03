@@ -84,22 +84,30 @@
       <!-- VISOR EN VIVO DE ESCÁNER DE CÁMARA RESPONSIVO ELÁSTICO -->
       @if (isScannerActive()) {
         @defer (when isScannerActive()) {
-          <div class="w-full bg-slate-950 border-2 border-status-info/30 rounded-2xl overflow-hidden relative shadow-inner animate-fade-in aspect-video max-h-56 sm:max-h-64 flex items-center justify-center">
-            <zxing-scanner [formats]="allowedFormats"
-                           (scanSuccess)="onBarcodeScanSuccess($any($event))"
-                           class="w-full h-full object-cover">
+          <div
+            class="w-full bg-slate-950 border-2 border-status-info/30 rounded-2xl overflow-hidden relative shadow-inner animate-fade-in aspect-video max-h-56 sm:max-h-64 flex items-center justify-center"
+          >
+            <zxing-scanner
+              [formats]="allowedFormats"
+              (scanSuccess)="onBarcodeScanSuccess($any($event))"
+              class="w-full h-full object-cover"
+            >
             </zxing-scanner>
-            <div class="absolute inset-x-0 h-0.5 bg-status-info shadow-[0_0_10px_#0284c7] animate-pulse top-1/2"></div>
+            <div
+              class="absolute inset-x-0 h-0.5 bg-status-info shadow-[0_0_10px_#0284c7] animate-pulse top-1/2"
+            ></div>
           </div>
         } @loading {
-          <div class="w-full h-48 bg-slate-900 animate-pulse rounded-2xl flex items-center justify-center text-xs text-slate-500">
+          <div
+            class="w-full h-48 bg-slate-900 animate-pulse rounded-2xl flex items-center justify-center text-xs text-slate-500"
+          >
             Cargando hardware óptico...
           </div>
         }
       }
-
       <!-- Matriz de Tarjetas Táctiles Adaptable: 2 columnas en móvil chico, 3 en tablets/PC -->
-      <div style="content-visibility: auto;"
+      <div
+        style="content-visibility: auto"
         class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 max-h-[22rem] lg:max-h-[calc(100vh-20rem)] overflow-y-auto pr-1 scrollbar-thin w-full"
       >
         @for (prod of filteredProducts(); track prod.id) {
@@ -172,6 +180,7 @@
         }
       </div>
     </div>
+
     <!-- COLUMNA DERECHA: RESUMEN DE LA COMPRA Y CARRO DE COMPRAS (OCUPA 5 COLUMNAS EN PC) -->
     <div
       class="lg:col-span-5 bg-brand-surface border border-brand-border/80 rounded-2xl p-3 sm:p-4 flex flex-col justify-between min-h-fit lg:min-h-[calc(100vh-15rem)] shadow-sm w-full min-w-0"
@@ -296,6 +305,70 @@
             </div>
           }
         </div>
+      </div>
+      <!-- 📌 NUEVO BLOQUE INTEGRADO: MÓDULO DE DESPACHO DE FACTURA ELECTRÓNICA -->
+      <div
+        class="mt-3 p-3 bg-brand-bg/40 border border-brand-border/60 rounded-xl space-y-3 animate-fade-in text-left"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <div class="space-y-0.5">
+            <span class="block text-xs font-bold text-slate-200 uppercase tracking-wide"
+              >Facturación Electrónica</span
+            >
+            <span class="block text-[10px] text-slate-500"
+              >Enviar copia digital en PDF de forma automatizada al cliente</span
+            >
+          </div>
+
+          <!-- Checkbox de activación elástica -->
+          <label class="relative inline-flex items-center cursor-pointer shrink-0 select-none">
+            <input
+              type="checkbox"
+              [checked]="requireDigitalInvoice()"
+              (change)="toggleDigitalInvoice($event)"
+              class="sr-only peer"
+            />
+            <div
+              class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-500 peer-checked:after:bg-white after:border-transparent after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-status-success"
+            ></div>
+          </label>
+        </div>
+
+        <!-- Input expandible animado: Solo aparece si el operario activa la casilla superior -->
+        @if (requireDigitalInvoice()) {
+          <div class="space-y-1 mt-1 animate-slide-in">
+            <label class="block text-[9px] text-slate-400 font-bold uppercase tracking-wider"
+              >Correo Electrónico del Comprador *</label
+            >
+            <div class="relative">
+              <span
+                class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-500"
+              >
+                <svg
+                  class="w-3.5 h-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                  />
+                </svg>
+              </span>
+              <input
+                (input)="onEmailInput($event)"
+                [value]="clientEmail()"
+                type="email"
+                inputmode="email"
+                placeholder="Ej: cliente@ferreteria.com"
+                class="w-full bg-brand-surface border border-brand-border text-slate-200 pl-8 pr-3 py-1.5 rounded-lg focus:outline-none focus:border-status-info font-mono text-[11px] placeholder-slate-600 transition-colors"
+              />
+            </div>
+          </div>
+        }
       </div>
 
       <!-- MEDIOS DE PAGO Y LIQUIDACIÓN FINANCIERA -->

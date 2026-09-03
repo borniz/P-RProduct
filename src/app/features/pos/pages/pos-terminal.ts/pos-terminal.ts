@@ -1,6 +1,6 @@
 import { Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { RouterModule } from '@angular/router'; // 📌 Importado para dar soporte a routerLink en la vista
+import { RouterModule } from '@angular/router'; 
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { PRODUCT_REPOSITORY } from '../../../products/data-access/product.repository';
@@ -11,7 +11,7 @@ import { Product } from '../../../products/models/product.model';
 import { StockMovement } from '../../../inventory/stock/models/stock.model';
 import { AuthService } from '../../../../core/services/auth.service';
 
-// 📌 IMPORTACIONES CORE DEL MOTOR DE ESCANEO ÓPTICO
+// 📌 MOTOR DE ESCANEO ÓPTICO POR HARDWARE
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { BarcodeFormat } from '@zxing/library';
 import { SettingsService } from '../../../../core/services/settings.service';
@@ -20,11 +20,14 @@ import { LoadingService } from '../../../../core/services/loading.service';
 @Component({
   selector: 'app-pos-terminal',
   standalone: true,
-  // 📌 SOLUCCIÓN INTEGRAL AL ERROR NG8001: Se inyecta el ZXingScannerModule dentro de los imports
   imports: [RouterModule, ZXingScannerModule],
   templateUrl: './pos-terminal.html',
 })
 export class PosTerminalComponent implements OnInit, OnDestroy {
+  // 📬 SIGNALS REACTIVOS DE CORREO Y FACTURACIÓN ELECTRÓNICA
+  readonly clientEmail = signal<string>('');
+  readonly requireDigitalInvoice = signal<boolean>(false);
+
   private readonly loadingService = inject(LoadingService);
   private readonly authService = inject(AuthService);
   private readonly productRepo = inject(PRODUCT_REPOSITORY);
@@ -40,12 +43,10 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   readonly searchQuery = signal<string>('');
   readonly cart = signal<CartItem[]>([]);
   readonly errorMessage = signal<string>('');
-  readonly selectedPayment = signal<'Efectivo' | 'Debito' | 'Credito' | 'Transferencia'>(
-    'Efectivo',
-  );
+  readonly selectedPayment = signal<'Efectivo' | 'Debito' | 'Credito' | 'Transferencia'>('Efectivo');
   readonly isScannerActive = signal<boolean>(false);
 
-  // 🔗 Puentes y Aliases reactivos de lectura para el archivo HTML
+  // 🔗 Puentes de lectura reactiva para el archivo HTML
   readonly paymentMethod = this.selectedPayment.asReadonly();
   readonly totalCart = computed(() => this.cartTotal());
 
@@ -57,13 +58,11 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     BarcodeFormat.QR_CODE,
   ];
 
-  // 🔍 Filtro en tiempo real para el buscador predictivo por Nombre o SKU
+  // 🔍 FILTRADO EN TIEMPO REAL: Optimización para LCP (Slice TOP 12 inicial)
   readonly filteredProducts = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     const all = this.products().filter((p) => p.stock > 0);
 
-    // Si el operario no ha digitado nada, solo renderiza los primeros 12 artículos.
-    // Esto reduce el peso inicial de la página en un 80% y dispara el LCP a zona verde.
     if (!query) {
       return all.slice(0, 12);
     }
@@ -103,25 +102,24 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
       this.navSubscription.unsubscribe();
     }
   }
-  // 🚀 SOLUCCIÓN AL ERROR TS2345: Firma tipada como 'any' para recibir limpiamente el string del escáner
+
+  onEmailInput(e: Event): void {
+    this.clientEmail.set((e.target as HTMLInputElement).value.trim());
+  }
+
+  toggleDigitalInvoice(e: Event): void {
+    this.requireDigitalInvoice.set((e.target as HTMLInputElement).checked);
+  }
   onBarcodeScanSuccess(scannedCode: any): void {
-    const codeString = String(scannedCode || '')
-      .trim()
-      .toUpperCase();
+    const codeString = String(scannedCode || '').trim().toUpperCase();
     if (!codeString) return;
 
-    // Buscamos en caliente el producto en el catálogo cuyo SKU coincida con la lectura óptica
     const matchedProduct = this.products().find((p) => p.sku.trim().toUpperCase() === codeString);
 
     if (matchedProduct) {
-      // Si el artículo existe y tiene existencias, lo inyectamos directamente al carrito
       this.addToCart(matchedProduct);
-
-      // Apagamos la cámara por usabilidad tras el escaneo exitoso
       this.isScannerActive.set(false);
       this.errorMessage.set('');
-
-      // Emitimos un sutil sonido nativo de confirmación (Beep)
       this.playScanBeep();
     } else {
       this.errorMessage.set(
@@ -244,11 +242,12 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     await this.checkout();
   }
 
+  // 🚀 DISPARADOR ASÍNCRONO DE CHECKOUT CON INYECCIÓN POSTAL ELECTRONICA
   async checkout(): Promise<void> {
     if (this.cart().length === 0) return;
 
-    // 🚀 ENCIENDE EL OVERLAY DE PORCENTAJE REAL DE B&R SOLUTIONS
-    this.loadingService.show('Procesando venta y emitiendo boleta contable...');
+    // Encendemos el overlay de porcentaje real global
+    this.loadingService.show('Procesando venta y emitiendo boleta contable fiscal...');
     try {
       const apiPaymentMethod =
         this.selectedPayment() === 'Debito' || this.selectedPayment() === 'Credito'
@@ -268,7 +267,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
         cashClosureId: undefined,
       };
 
-      // 1. Guardar boleta principal
+      // 1. Insertar boleta principal en Supabase
       await this.posRepo.processSale(invoice);
 
       // 2. Despacho masivo y Kardex en paralelo
@@ -306,12 +305,23 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
 
       await Promise.all(promesasDeInventario);
 
+      // 📬 INTEGRACIÓN MAESTRA DE FACTURA ELECTRÓNICA POR EMAIL
+      if (this.requireDigitalInvoice() && this.clientEmail().includes('@') && typeof (this.posRepo as any).sendInvoiceToEmail === 'function') {
+        await (this.posRepo as any).sendInvoiceToEmail(invoice.id, this.clientEmail());
+        console.log(`✉️ Factura electrónica despachada al servidor de correo para: ${this.clientEmail()}`);
+      }
+
       // 🏁 FINALIZA LA LECTURA FLUIDA COMPLETANDO LA BARRA AL 100%
       this.loadingService.hide();
       this.clearCart();
+      
+      // Reseteamos las señales de control de facturación
+      this.clientEmail.set('');
+      this.requireDigitalInvoice.set(false);
+
       alert(`¡Venta procesada con éxito! Transacción: ${invoice.id}`);
     } catch (err) {
-      this.loadingService.hide(); // Apaga el modal en caso de error de red
+      this.loadingService.hide();
       this.errorMessage.set('Error en el servidor central al procesar la venta.');
     }
   }
