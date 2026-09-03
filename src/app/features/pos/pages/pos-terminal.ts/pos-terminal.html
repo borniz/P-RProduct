@@ -89,6 +89,8 @@
           >
             <zxing-scanner
               [formats]="allowedFormats"
+              [torch]="isTorchActive()"
+              [tryHarder]="true"
               (scanSuccess)="onBarcodeScanSuccess($any($event))"
               class="w-full h-full object-cover"
             >
@@ -96,6 +98,20 @@
             <div
               class="absolute inset-x-0 h-0.5 bg-status-info shadow-[0_0_10px_#0284c7] animate-pulse top-1/2"
             ></div>
+            <div class="absolute inset-0 border-[30px] border-slate-950/60 pointer-events-none flex items-center justify-center">
+              <div class="w-48 h-28 border-2 border-dashed border-status-info/70 rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.8)]"></div>
+            </div>
+            <button
+              (click)="toggleTorch()"
+              type="button"
+              [class.bg-status-warning]="isTorchActive()"
+              [class.text-slate-950]="isTorchActive()"
+              [class.bg-slate-900/80]="!isTorchActive()"
+              [class.text-white]="!isTorchActive()"
+              class="absolute bottom-3 right-3 p-2.5 rounded-xl border border-white/10 backdrop-blur-xs transition-all cursor-pointer shadow-lg z-20 flex items-center gap-1.5 text-[11px] font-bold"
+            >
+              <span>{{ isTorchActive() ? '💡 Apagar Luz' : '🔦 Encender Luz' }}</span>
+            </button>
           </div>
         } @loading {
           <div

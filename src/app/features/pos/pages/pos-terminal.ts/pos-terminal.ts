@@ -1,6 +1,6 @@
 import { Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { RouterModule } from '@angular/router'; 
+import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { PRODUCT_REPOSITORY } from '../../../products/data-access/product.repository';
@@ -35,7 +35,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   private readonly stockRepo = inject(STOCK_REPOSITORY);
   private readonly router = inject(Router);
   private readonly settingsService = inject(SettingsService);
-
+  readonly isTorchActive = signal<boolean>(false);
   private navSubscription!: Subscription;
 
   // 📦 Signals Core del Estado del Terminal POS
@@ -43,7 +43,9 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   readonly searchQuery = signal<string>('');
   readonly cart = signal<CartItem[]>([]);
   readonly errorMessage = signal<string>('');
-  readonly selectedPayment = signal<'Efectivo' | 'Debito' | 'Credito' | 'Transferencia'>('Efectivo');
+  readonly selectedPayment = signal<'Efectivo' | 'Debito' | 'Credito' | 'Transferencia'>(
+    'Efectivo',
+  );
   readonly isScannerActive = signal<boolean>(false);
 
   // 🔗 Puentes de lectura reactiva para el archivo HTML
@@ -103,6 +105,10 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     }
   }
 
+  toggleTorch(): void {
+    this.isTorchActive.update((current) => !current);
+  }
+  
   onEmailInput(e: Event): void {
     this.clientEmail.set((e.target as HTMLInputElement).value.trim());
   }
@@ -111,7 +117,9 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     this.requireDigitalInvoice.set((e.target as HTMLInputElement).checked);
   }
   onBarcodeScanSuccess(scannedCode: any): void {
-    const codeString = String(scannedCode || '').trim().toUpperCase();
+    const codeString = String(scannedCode || '')
+      .trim()
+      .toUpperCase();
     if (!codeString) return;
 
     const matchedProduct = this.products().find((p) => p.sku.trim().toUpperCase() === codeString);
@@ -306,8 +314,11 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
       await Promise.all(promesasDeInventario);
 
       // 📬 INTEGRACIÓN MAESTRA DE FACTURA ELECTRÓNICA POR EMAIL
-      if (this.requireDigitalInvoice() && this.clientEmail().includes('@') && typeof (this.posRepo as any).sendInvoiceToEmail === 'function') {
-        
+      if (
+        this.requireDigitalInvoice() &&
+        this.clientEmail().includes('@') &&
+        typeof (this.posRepo as any).sendInvoiceToEmail === 'function'
+      ) {
         // Embalamos el payload adaptado exactamente al contrato que lee tu Edge Function (email, invoice)
         await (this.posRepo as any).sendInvoiceToEmail(this.clientEmail(), invoice);
       }
@@ -315,7 +326,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
       // 🏁 FINALIZA LA LECTURA FLUIDA COMPLETANDO LA BARRA AL 100%
       this.loadingService.hide();
       this.clearCart();
-      
+
       // Reseteamos las señales de control de facturación
       this.clientEmail.set('');
       this.requireDigitalInvoice.set(false);
