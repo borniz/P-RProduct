@@ -92,7 +92,7 @@ export class SupabasePosRepository implements PosRepository {
   async sendInvoiceToEmail(email: string, invoice: SaleInvoice): Promise<void> {
     const { data, error } = await this.supabase.functions.invoke('send-digital-invoice', {
       body: { 
-        email: email, 
+        targetEmail: email, 
         invoice: invoice 
       }
     });
